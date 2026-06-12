@@ -1,6 +1,5 @@
-package com.tracker.MoneyTracker.auth.userLogin;
+package com.tracker.MoneyTracker.auth;
 
-import com.tracker.MoneyTracker.auth.AppUser;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

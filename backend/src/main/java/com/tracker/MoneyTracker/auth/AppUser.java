@@ -1,8 +1,6 @@
 package com.tracker.MoneyTracker.auth;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
@@ -12,7 +10,7 @@ import java.util.Collection;
 import java.util.List;
 
 @Entity
-@Table(name = "APP_USERS")
+@Table(name = "app_users")
 @Getter
 @Setter
 public class AppUser implements UserDetails {
@@ -23,11 +21,12 @@ public class AppUser implements UserDetails {
     private String password;
     private String email;
     private String token;
+    private java.time.LocalDateTime createdAt;
+    private java.time.LocalDateTime updatedAt;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of();
-
     }
 
     @Override

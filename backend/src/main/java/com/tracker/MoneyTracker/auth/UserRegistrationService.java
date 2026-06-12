@@ -1,12 +1,6 @@
-package com.tracker.MoneyTracker.auth.userLogin;
+package com.tracker.MoneyTracker.auth;
 
-import com.tracker.MoneyTracker.auth.Constants;
-import com.tracker.MoneyTracker.auth.AppUser;
-import com.tracker.MoneyTracker.auth.UserRepository;
-import com.tracker.MoneyTracker.auth.UserService;
-import jakarta.persistence.EntityExistsException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 

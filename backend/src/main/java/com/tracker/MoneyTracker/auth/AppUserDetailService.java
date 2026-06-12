@@ -1,7 +1,5 @@
-package com.tracker.MoneyTracker.auth.userAuthentication;
+package com.tracker.MoneyTracker.auth;
 
-import com.tracker.MoneyTracker.auth.AppUser;
-import com.tracker.MoneyTracker.auth.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

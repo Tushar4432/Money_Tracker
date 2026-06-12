@@ -6,5 +6,5 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: update            # Hibernate creates/updates tables from @Entity classes
     show-sql: true
