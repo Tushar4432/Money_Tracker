@@ -101,6 +101,13 @@
 			<version>5.11.1</version>
 		</dependency>
 
+		<!-- H2 for unit testing -->
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<scope>test</scope>
+		</dependency>
+
 	</dependencies>
 
 	<build>
