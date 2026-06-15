@@ -1,10 +1,15 @@
 package com.tracker.MoneyTracker.transaction;
 
+import com.tracker.MoneyTracker.goal.SpendingGoal;
+import com.tracker.MoneyTracker.goal.SpendingGoalRepository;
+import com.tracker.MoneyTracker.notification.Notification;
+import com.tracker.MoneyTracker.notification.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -17,11 +22,15 @@ public class TransactionService {
     private final TransactionRepository transactionRepository;
     private final FileParser fileParser;
     private final CategoryClassifier categoryClassifier;
+    private final SpendingGoalRepository spendingGoalRepository;
+    private final NotificationService notificationService;
 
     public TransactionService() {
         this.transactionRepository = null;
         this.fileParser = new FileParser();
         this.categoryClassifier = new CategoryClassifier(new CategoryMapper());
+        this.spendingGoalRepository = null;
+        this.notificationService = null;
     }
 
     @Autowired
@@ -31,6 +40,20 @@ public class TransactionService {
         this.transactionRepository = transactionRepository;
         this.fileParser = fileParser;
         this.categoryClassifier = categoryClassifier;
+        this.spendingGoalRepository = null;
+        this.notificationService = null;
+    }
+
+    public TransactionService(TransactionRepository transactionRepository,
+                              FileParser fileParser,
+                              CategoryClassifier categoryClassifier,
+                              SpendingGoalRepository spendingGoalRepository,
+                              NotificationService notificationService) {
+        this.transactionRepository = transactionRepository;
+        this.fileParser = fileParser;
+        this.categoryClassifier = categoryClassifier;
+        this.spendingGoalRepository = spendingGoalRepository;
+        this.notificationService = notificationService;
     }
 
     public List<Transaction> processStatement(File file, String userId) throws Exception {
@@ -112,6 +135,8 @@ public class TransactionService {
             transactionRepository.saveAll(transactions);
         }
 
+        evaluateAndNotify(userId);
+
         return transactions;
     }
 
@@ -176,6 +201,67 @@ public class TransactionService {
             }
         }
         return clean;
+    }
+
+    /**
+     * Evaluates all active goals for the user and creates notifications
+     * when spending is approaching or exceeding the target.
+     * Called automatically after statement upload.
+     */
+    public void evaluateAndNotify(String userId) {
+        if (spendingGoalRepository == null || notificationService == null
+                || userId == null || userId.isBlank()) {
+            return;
+        }
+
+        List<SpendingGoal> activeGoals = spendingGoalRepository.findByUserIdAndActive(userId, true);
+        if (activeGoals.isEmpty()) {
+            return;
+        }
+
+        for (SpendingGoal goal : activeGoals) {
+            LocalDate start = goal.getStartDate() != null ? goal.getStartDate() : LocalDate.now().withDayOfMonth(1);
+            LocalDate end = goal.getEndDate() != null ? goal.getEndDate() : LocalDate.now();
+
+            List<Transaction> transactions = transactionRepository != null
+                    ? transactionRepository.findByUserIdAndTransactionDateBetween(userId, start, end)
+                    : List.of();
+
+            BigDecimal spent = transactions.stream()
+                    .filter(t -> "DEBIT".equals(t.getType()))
+                    .filter(t -> goal.getCategory().equals(t.getCategory()))
+                    .map(Transaction::getAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            BigDecimal target = goal.getTargetAmount();
+            if (target == null || target.compareTo(BigDecimal.ZERO) == 0) {
+                continue;
+            }
+
+            double percentage = spent.multiply(BigDecimal.valueOf(100))
+                    .divide(target, 2, RoundingMode.HALF_UP)
+                    .doubleValue();
+
+            if (percentage >= 100.0) {
+                Notification notification = new Notification();
+                notification.setUserId(userId);
+                notification.setType("GOAL_EXCEEDED");
+                notification.setTitle(goal.getCategory());
+                notification.setMessage("You have exceeded your " + goal.getCategory()
+                        + " budget of " + target + ". Spent: " + spent);
+                notification.setReferenceId(goal.getId());
+                notificationService.createNotification(notification);
+            } else if (percentage >= 80.0) {
+                Notification notification = new Notification();
+                notification.setUserId(userId);
+                notification.setType("GOAL_WARNING");
+                notification.setTitle(goal.getCategory());
+                notification.setMessage("You have used " + percentage + "% of your "
+                        + goal.getCategory() + " budget. Spent: " + spent + " / " + target);
+                notification.setReferenceId(goal.getId());
+                notificationService.createNotification(notification);
+            }
+        }
     }
 
     private String extractSentTo(String details) {

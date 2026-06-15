@@ -1,5 +1,8 @@
 package com.tracker.MoneyTracker.transaction;
 
+import com.tracker.MoneyTracker.goal.SpendingGoal;
+import com.tracker.MoneyTracker.goal.SpendingGoalRepository;
+import com.tracker.MoneyTracker.notification.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -23,9 +26,50 @@ class TransactionServiceTest {
 
     private TransactionService sut;
 
+    @Mock
+    private TransactionRepository transactionRepository;
+
+    @Mock
+    private FileParser fileParser;
+
+    @Mock
+    private CategoryClassifier categoryClassifier;
+
+    @Mock
+    private SpendingGoalRepository spendingGoalRepository;
+
+    @Mock
+    private NotificationService notificationService;
+
     @BeforeEach
     void setUp() {
         sut = new TransactionService();
+    }
+
+    private SpendingGoal createGoal(String id, String userId, String category, BigDecimal target,
+                                     String period, LocalDate startDate, LocalDate endDate, boolean active) {
+        SpendingGoal goal = new SpendingGoal();
+        goal.setId(id);
+        goal.setUserId(userId);
+        goal.setCategory(category);
+        goal.setTargetAmount(target);
+        goal.setPeriod(period);
+        goal.setStartDate(startDate);
+        goal.setEndDate(endDate);
+        goal.setActive(active);
+        return goal;
+    }
+
+    private Transaction createTransaction(String id, String userId, LocalDate date, BigDecimal amount,
+                                           String type, String category) {
+        Transaction tx = new Transaction();
+        tx.setId(id);
+        tx.setUserId(userId);
+        tx.setTransactionDate(date);
+        tx.setAmount(amount);
+        tx.setType(type);
+        tx.setCategory(category);
+        return tx;
     }
 
     @Nested
@@ -226,6 +270,120 @@ class TransactionServiceTest {
 
             // Assert
             assertThat(result).isNotNull();
+        }
+    }
+
+    @Nested
+    @DisplayName("evaluateAndNotify")
+    class EvaluateAndNotifyTests {
+
+        @Test
+        @DisplayName("Should create GOAL_EXCEEDED notification when spending exceeds target")
+        void shouldCreateExceededNotification_WhenSpendingExceedsTarget() {
+            // Arrange
+            String userId = "user-123";
+            SpendingGoal foodGoal = createGoal("g1", userId, "FOOD",
+                    new BigDecimal("1000"), "MONTHLY",
+                    LocalDate.of(2026, 6, 1), LocalDate.of(2026, 6, 30), true);
+            given(spendingGoalRepository.findByUserIdAndActive(userId, true))
+                    .willReturn(List.of(foodGoal));
+
+            Transaction tx = createTransaction("t1", userId, LocalDate.of(2026, 6, 15),
+                    new BigDecimal("1200"), "DEBIT", "FOOD");
+            given(transactionRepository.findByUserIdAndTransactionDateBetween(eq(userId), any(LocalDate.class), any(LocalDate.class)))
+                    .willReturn(List.of(tx));
+
+            TransactionService service = new TransactionService(transactionRepository,
+                    fileParser, categoryClassifier, spendingGoalRepository, notificationService);
+
+            // Act
+            service.evaluateAndNotify(userId);
+
+            // Assert
+            then(notificationService).should().createNotification(argThat(n ->
+                    "GOAL_EXCEEDED".equals(n.getType()) &&
+                    "FOOD".equals(n.getTitle())
+            ));
+        }
+
+        @Test
+        @DisplayName("Should create GOAL_WARNING notification when spending is near target")
+        void shouldCreateWarningNotification_WhenSpendingNearTarget() {
+            // Arrange
+            String userId = "user-123";
+            SpendingGoal foodGoal = createGoal("g1", userId, "FOOD",
+                    new BigDecimal("1000"), "MONTHLY",
+                    LocalDate.of(2026, 6, 1), LocalDate.of(2026, 6, 30), true);
+            given(spendingGoalRepository.findByUserIdAndActive(userId, true))
+                    .willReturn(List.of(foodGoal));
+
+            Transaction tx = createTransaction("t1", userId, LocalDate.of(2026, 6, 15),
+                    new BigDecimal("850"), "DEBIT", "FOOD");
+            given(transactionRepository.findByUserIdAndTransactionDateBetween(eq(userId), any(LocalDate.class), any(LocalDate.class)))
+                    .willReturn(List.of(tx));
+
+            TransactionService service = new TransactionService(transactionRepository,
+                    fileParser, categoryClassifier, spendingGoalRepository, notificationService);
+
+            // Act
+            service.evaluateAndNotify(userId);
+
+            // Assert
+            then(notificationService).should().createNotification(argThat(n ->
+                    "GOAL_WARNING".equals(n.getType()) &&
+                    "FOOD".equals(n.getTitle())
+            ));
+        }
+
+        @Test
+        @DisplayName("Should not create notification when spending is below 80% threshold")
+        void shouldNotCreateNotification_WhenSpendingBelowThreshold() {
+            // Arrange
+            String userId = "user-123";
+            SpendingGoal foodGoal = createGoal("g1", userId, "FOOD",
+                    new BigDecimal("1000"), "MONTHLY",
+                    LocalDate.of(2026, 6, 1), LocalDate.of(2026, 6, 30), true);
+            given(spendingGoalRepository.findByUserIdAndActive(userId, true))
+                    .willReturn(List.of(foodGoal));
+
+            Transaction tx = createTransaction("t1", userId, LocalDate.of(2026, 6, 15),
+                    new BigDecimal("500"), "DEBIT", "FOOD");
+            given(transactionRepository.findByUserIdAndTransactionDateBetween(eq(userId), any(LocalDate.class), any(LocalDate.class)))
+                    .willReturn(List.of(tx));
+
+            TransactionService service = new TransactionService(transactionRepository,
+                    fileParser, categoryClassifier, spendingGoalRepository, notificationService);
+
+            // Act
+            service.evaluateAndNotify(userId);
+
+            // Assert
+            then(notificationService).should(never()).createNotification(any());
+        }
+
+        @Test
+        @DisplayName("Should not create notification when no active goals")
+        void shouldNotCreateNotification_WhenNoActiveGoals() {
+            // Arrange
+            given(spendingGoalRepository.findByUserIdAndActive("user-123", true))
+                    .willReturn(List.of());
+
+            TransactionService service = new TransactionService(transactionRepository,
+                    fileParser, categoryClassifier, spendingGoalRepository, notificationService);
+
+            // Act
+            service.evaluateAndNotify("user-123");
+
+            // Assert
+            then(notificationService).should(never()).createNotification(any());
+        }
+
+        @Test
+        @DisplayName("Should handle gracefully when repositories are null")
+        void shouldHandleGracefully_WhenRepositoriesNull() {
+            // Uses default constructor — all repos are null
+            assertThatCode(() -> sut.evaluateAndNotify("user-123"))
+                    .doesNotThrowAnyException();
         }
     }
 }

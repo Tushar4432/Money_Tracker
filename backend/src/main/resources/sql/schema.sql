@@ -117,3 +117,22 @@ CREATE TABLE file_uploads (
 CREATE INDEX idx_uploads_user_id     ON file_uploads (user_id);
 CREATE INDEX idx_uploads_status      ON file_uploads (status);
 CREATE INDEX idx_uploads_uploaded_at ON file_uploads (uploaded_at DESC);
+
+CREATE TABLE notifications (
+    id              VARCHAR(36)     PRIMARY KEY,
+    user_id         VARCHAR(36)     NOT NULL,
+    type            VARCHAR(30)     NOT NULL CHECK (type IN ('GOAL_WARNING', 'GOAL_EXCEEDED', 'BUDGET_TIP', 'SPENDING_INSIGHT', 'SYSTEM')),
+    title           VARCHAR(200)    NOT NULL,
+    message         TEXT            NOT NULL,
+    read            BOOLEAN         NOT NULL DEFAULT FALSE,
+    reference_id    VARCHAR(36),
+    created_at      TIMESTAMP       NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT fk_notification_user
+        FOREIGN KEY (user_id) REFERENCES app_users (uuid) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_notifications_user_id   ON notifications (user_id);
+CREATE INDEX idx_notifications_user_read ON notifications (user_id, read);
+CREATE INDEX idx_notifications_type      ON notifications (type);
+CREATE INDEX idx_notifications_created   ON notifications (created_at DESC);

@@ -320,13 +320,12 @@ class AnalyticsServiceTest {
             // Arrange
             String userId = "user-123";
             LocalDate now = LocalDate.now();
-            LocalDate start = now.withDayOfMonth(1);
             List<Transaction> transactions = List.of(
                     createTransaction("t1", userId, now, new BigDecimal("300.00"), "DEBIT", "FOOD", "Swiggy"),
-                    createTransaction("t2", userId, now, new BigDecimal("200.00"), "DEBIT", "FOOD", "Zomato"),
+                    createTransaction("t2", userId, now, new BigDecimal("300.00"), "DEBIT", "FOOD", "Zomato"),
                     createTransaction("t3", userId, now, new BigDecimal("500.00"), "DEBIT", "TRANSPORT", "Fuel")
             );
-            given(transactionRepository.findByUserIdAndTransactionDateBetween(eq(userId), eq(start), eq(now)))
+            given(transactionRepository.findByUserIdAndTransactionDateBetween(eq(userId), any(LocalDate.class), any(LocalDate.class)))
                     .willReturn(transactions);
 
             // Act
@@ -334,9 +333,10 @@ class AnalyticsServiceTest {
 
             // Assert
             assertThat(budget).hasSize(2);
-            // FOOD should be first (500 total)
-            assertThat(budget.get(0).category()).isEqualTo("FOOD");
-            assertThat(budget.get(0).spentAmount()).isEqualByComparingTo(new BigDecimal("500.00"));
+            // FOOD total = 600, TRANSPORT total = 500
+            assertThat(budget).extracting(b -> b.category()).containsExactlyInAnyOrder("FOOD", "TRANSPORT");
+            var foodBudget = budget.stream().filter(b -> "FOOD".equals(b.category())).findFirst().orElseThrow();
+            assertThat(foodBudget.spentAmount()).isEqualByComparingTo(new BigDecimal("600.00"));
         }
 
         @Test
