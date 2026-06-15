@@ -1,5 +1,7 @@
 package com.tracker.MoneyTracker.goal;
 
+import com.tracker.MoneyTracker.exception.BadRequestException;
+import com.tracker.MoneyTracker.exception.ResourceNotFoundException;
 import com.tracker.MoneyTracker.transaction.TransactionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -80,7 +82,7 @@ class GoalServiceTest {
                     null, "MONTHLY", LocalDate.now(), null, true);
 
             assertThatThrownBy(() -> sut.createGoal(goal))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(BadRequestException.class)
                     .hasMessageContaining("targetAmount");
         }
 
@@ -91,7 +93,7 @@ class GoalServiceTest {
                     BigDecimal.ZERO, "MONTHLY", LocalDate.now(), null, true);
 
             assertThatThrownBy(() -> sut.createGoal(goal))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(BadRequestException.class)
                     .hasMessageContaining("targetAmount");
         }
 
@@ -102,7 +104,7 @@ class GoalServiceTest {
                     new BigDecimal("1000.00"), "MONTHLY", LocalDate.now(), null, true);
 
             assertThatThrownBy(() -> sut.createGoal(goal))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(BadRequestException.class)
                     .hasMessageContaining("category");
         }
 
@@ -113,7 +115,7 @@ class GoalServiceTest {
                     new BigDecimal("1000.00"), "DAILY", LocalDate.now(), null, true);
 
             assertThatThrownBy(() -> sut.createGoal(goal))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(BadRequestException.class)
                     .hasMessageContaining("period");
         }
     }
@@ -213,7 +215,7 @@ class GoalServiceTest {
                     new BigDecimal("1000"), "MONTHLY", LocalDate.now(), null, true);
 
             assertThatThrownBy(() -> sut.updateGoal("nonexistent", updated))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(ResourceNotFoundException.class)
                     .hasMessageContaining("not found");
         }
     }
@@ -245,7 +247,7 @@ class GoalServiceTest {
             given(goalRepository.findById("nonexistent")).willReturn(Optional.empty());
 
             assertThatThrownBy(() -> sut.deleteGoal("nonexistent"))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(ResourceNotFoundException.class)
                     .hasMessageContaining("not found");
         }
     }
@@ -281,7 +283,7 @@ class GoalServiceTest {
             given(goalRepository.findById("nonexistent")).willReturn(Optional.empty());
 
             assertThatThrownBy(() -> sut.getGoalProgress("nonexistent"))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(ResourceNotFoundException.class)
                     .hasMessageContaining("not found");
         }
     }

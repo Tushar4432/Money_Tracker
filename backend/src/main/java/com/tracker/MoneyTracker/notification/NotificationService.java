@@ -1,5 +1,8 @@
 package com.tracker.MoneyTracker.notification;
 
+import com.tracker.MoneyTracker.error.ErrorCode;
+import com.tracker.MoneyTracker.exception.BadRequestException;
+import com.tracker.MoneyTracker.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -52,7 +55,7 @@ public class NotificationService {
 
     public Notification markAsRead(String notificationId) {
         Notification notification = notificationRepository.findById(notificationId)
-                .orElseThrow(() -> new IllegalArgumentException("Notification not found: " + notificationId));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.NOTIFICATION_NOT_FOUND, notificationId));
         notification.setRead(true);
         return notificationRepository.save(notification);
     }
@@ -68,7 +71,7 @@ public class NotificationService {
 
     public void deleteNotification(String notificationId) {
         Notification notification = notificationRepository.findById(notificationId)
-                .orElseThrow(() -> new IllegalArgumentException("Notification not found: " + notificationId));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.NOTIFICATION_NOT_FOUND, notificationId));
         notificationRepository.delete(notification);
     }
 
@@ -82,16 +85,17 @@ public class NotificationService {
     private void validateNotification(Notification notification) {
         Objects.requireNonNull(notification, "Notification must not be null");
         if (notification.getUserId() == null || notification.getUserId().isBlank()) {
-            throw new IllegalArgumentException("userId must not be blank");
+            throw new BadRequestException(ErrorCode.MISSING_FIELD, "userId");
         }
         if (notification.getType() == null || !VALID_TYPES.contains(notification.getType())) {
-            throw new IllegalArgumentException("type must be one of: " + VALID_TYPES);
+            throw new BadRequestException(ErrorCode.VALIDATION_ERROR,
+                    "type must be one of: " + VALID_TYPES);
         }
         if (notification.getTitle() == null || notification.getTitle().isBlank()) {
-            throw new IllegalArgumentException("title must not be blank");
+            throw new BadRequestException(ErrorCode.MISSING_FIELD, "title");
         }
         if (notification.getMessage() == null || notification.getMessage().isBlank()) {
-            throw new IllegalArgumentException("message must not be blank");
+            throw new BadRequestException(ErrorCode.MISSING_FIELD, "message");
         }
     }
 }

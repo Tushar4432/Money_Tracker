@@ -12,6 +12,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import com.tracker.MoneyTracker.exception.BadRequestException;
+import com.tracker.MoneyTracker.exception.ResourceNotFoundException;
+
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
@@ -74,7 +77,7 @@ class NotificationServiceTest {
                     "Title", "Message", false);
 
             assertThatThrownBy(() -> sut.createNotification(input))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(BadRequestException.class)
                     .hasMessageContaining("userId");
         }
 
@@ -85,7 +88,7 @@ class NotificationServiceTest {
                     "Title", "Message", false);
 
             assertThatThrownBy(() -> sut.createNotification(input))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(BadRequestException.class)
                     .hasMessageContaining("type");
         }
 
@@ -96,7 +99,7 @@ class NotificationServiceTest {
                     "", "Message", false);
 
             assertThatThrownBy(() -> sut.createNotification(input))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(BadRequestException.class)
                     .hasMessageContaining("title");
         }
 
@@ -107,7 +110,7 @@ class NotificationServiceTest {
                     "Title", "", false);
 
             assertThatThrownBy(() -> sut.createNotification(input))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(BadRequestException.class)
                     .hasMessageContaining("message");
         }
     }
@@ -196,7 +199,7 @@ class NotificationServiceTest {
             given(notificationRepository.findById("nonexistent")).willReturn(Optional.empty());
 
             assertThatThrownBy(() -> sut.markAsRead("nonexistent"))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(ResourceNotFoundException.class)
                     .hasMessageContaining("not found");
         }
     }
@@ -251,7 +254,7 @@ class NotificationServiceTest {
             given(notificationRepository.findById("nonexistent")).willReturn(Optional.empty());
 
             assertThatThrownBy(() -> sut.deleteNotification("nonexistent"))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(ResourceNotFoundException.class)
                     .hasMessageContaining("not found");
         }
     }

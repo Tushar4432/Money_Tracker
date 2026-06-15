@@ -1,5 +1,8 @@
 package com.tracker.MoneyTracker.goal;
 
+import com.tracker.MoneyTracker.error.ErrorCode;
+import com.tracker.MoneyTracker.exception.BadRequestException;
+import com.tracker.MoneyTracker.exception.ResourceNotFoundException;
 import com.tracker.MoneyTracker.transaction.Transaction;
 import com.tracker.MoneyTracker.transaction.TransactionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,9 +35,6 @@ public class GoalService {
         this.transactionRepository = transactionRepository;
     }
 
-    /**
-     * Creates and saves a new spending goal after validating fields.
-     */
     public SpendingGoal createGoal(SpendingGoal goal) {
         validateGoal(goal);
         if (goal.getId() == null || goal.getId().isBlank()) {
@@ -45,9 +45,6 @@ public class GoalService {
         return goalRepository.save(goal);
     }
 
-    /**
-     * Returns all goals for a user.
-     */
     public List<SpendingGoal> getGoalsByUser(String userId) {
         if (goalRepository == null || userId == null || userId.isBlank()) {
             return List.of();
@@ -55,9 +52,6 @@ public class GoalService {
         return goalRepository.findByUserId(userId);
     }
 
-    /**
-     * Returns only active goals for a user.
-     */
     public List<SpendingGoal> getActiveGoalsByUser(String userId) {
         if (goalRepository == null || userId == null || userId.isBlank()) {
             return List.of();
@@ -65,12 +59,9 @@ public class GoalService {
         return goalRepository.findByUserIdAndActive(userId, true);
     }
 
-    /**
-     * Updates an existing goal. Only non-null fields from the update are applied.
-     */
     public SpendingGoal updateGoal(String goalId, SpendingGoal update) {
         SpendingGoal existing = goalRepository.findById(goalId)
-                .orElseThrow(() -> new IllegalArgumentException("Goal not found: " + goalId));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.GOAL_NOT_FOUND, goalId));
 
         if (update.getCategory() != null && !update.getCategory().isBlank()) {
             existing.setCategory(update.getCategory());
@@ -93,21 +84,15 @@ public class GoalService {
         return goalRepository.save(existing);
     }
 
-    /**
-     * Deletes a goal by ID.
-     */
     public void deleteGoal(String goalId) {
         SpendingGoal goal = goalRepository.findById(goalId)
-                .orElseThrow(() -> new IllegalArgumentException("Goal not found: " + goalId));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.GOAL_NOT_FOUND, goalId));
         goalRepository.delete(goal);
     }
 
-    /**
-     * Calculates goal progress by comparing actual spending against the target.
-     */
     public GoalProgress getGoalProgress(String goalId) {
         SpendingGoal goal = goalRepository.findById(goalId)
-                .orElseThrow(() -> new IllegalArgumentException("Goal not found: " + goalId));
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorCode.GOAL_NOT_FOUND, goalId));
 
         BigDecimal spent = calculateSpent(goal);
         BigDecimal remaining = goal.getTargetAmount().subtract(spent);
@@ -131,23 +116,17 @@ public class GoalService {
     private void validateGoal(SpendingGoal goal) {
         Objects.requireNonNull(goal, "Goal must not be null");
         if (goal.getTargetAmount() == null || goal.getTargetAmount().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("targetAmount must be positive");
+            throw new BadRequestException(ErrorCode.VALIDATION_ERROR, "targetAmount must be positive");
         }
         if (goal.getCategory() == null || goal.getCategory().isBlank()) {
-            throw new IllegalArgumentException("category must not be blank");
+            throw new BadRequestException(ErrorCode.MISSING_FIELD, "category");
         }
         if (goal.getPeriod() == null || !VALID_PERIODS.contains(goal.getPeriod())) {
-            throw new IllegalArgumentException("period must be one of: " + VALID_PERIODS);
+            throw new BadRequestException(ErrorCode.VALIDATION_ERROR,
+                    "period must be one of: " + VALID_PERIODS);
         }
     }
 
-    /**
-     * Evaluates all active goals for a user and returns those needing attention.
-     * A goal needs attention if spending has reached ≥80% of the target.
-     *
-     * @param userId the user ID
-     * @return list of GoalProgress for goals at or above 80% usage
-     */
     public List<GoalProgress> evaluateAllGoals(String userId) {
         if (goalRepository == null || userId == null || userId.isBlank()) {
             return List.of();
@@ -164,7 +143,7 @@ public class GoalService {
                 if (progress.percentageUsed() >= 80.0) {
                     atRisk.add(progress);
                 }
-            } catch (IllegalArgumentException ignored) {
+            } catch (ResourceNotFoundException ignored) {
                 // goal was deleted between fetch and evaluation, skip
             }
         }

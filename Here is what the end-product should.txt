@@ -1,16 +1,22 @@
 Here is what the end-product should be able to do: 
 
-Should be able to take bank statements from the user in .csv or .xlsx format
-be able to parse bank statements from different banks so should have a generic parsing logic 
-once the user data is parsed it will be categorised based on the merchant the payment was done to, this can be done by pattern matching the merchant with the categorymap
-The parsed and categorised data should be analysed
-monthly spending
-category wise monthly spending
-category wise total spending
-increase and decrease in these data points from previous month 
-the data should be able to be categorized on monthly, quarterly, half-yearly, yearly basis. 
+1. Should be able to take bank statements from the user in .csv or .xlsx format
+2. be able to parse bank statements from different banks so should have a generic parsing logic 
+3. once the user data is parsed it will be categorised based on the merchant the payment was done to, this can be done by pattern matching the merchant with the categoryMap.
+4. The parsed and categorised data should be analysed
+	1. monthly spending
+	2. category wise monthly spending
+	3. category wise total spending
+	4. increase and decrease in these data points from previous month 
+	5. the data should be able to be categorized on monthly, quarterly, half-yearly, yearly basis. 
 
 5. the user should be able to add spending goals manually or from the chat of user with ai we can fetch the spend goals automatically.
 6. the goals should be stored and updated whenever a new bank statement is uploaded having new transactions after the goal creation date
 7. ai context should be stored for future conversations and the ai has access to all the user data as we are going to use a local model and containerize it on docker 
 
+Application Auth should :
+1. register a new user
+2. login of old user
+3. logout
+4. app works only after login
+5. each login session will have a token that will expire after a time perion and this token will be used by jwt to authenticate the user if they are logged in

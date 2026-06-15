@@ -1,5 +1,7 @@
 package com.tracker.MoneyTracker.notification;
 
+import com.tracker.MoneyTracker.error.ErrorCode;
+import com.tracker.MoneyTracker.exception.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,22 +35,22 @@ public class NotificationController {
 
     @GetMapping
     public ResponseEntity<List<Notification>> getNotifications(@RequestParam("userId") String userId) {
-        if (userId == null || userId.isBlank()) {
-            return ResponseEntity.badRequest().build();
-        }
         if (notificationService == null) {
             return ResponseEntity.ok(List.of());
+        }
+        if (userId == null || userId.isBlank()) {
+            throw new BadRequestException(ErrorCode.INVALID_INPUT, "userId is required");
         }
         return ResponseEntity.ok(notificationService.getNotificationsByUser(userId));
     }
 
     @GetMapping("/unread")
     public ResponseEntity<List<Notification>> getUnreadNotifications(@RequestParam("userId") String userId) {
-        if (userId == null || userId.isBlank()) {
-            return ResponseEntity.badRequest().build();
-        }
         if (notificationService == null) {
             return ResponseEntity.ok(List.of());
+        }
+        if (userId == null || userId.isBlank()) {
+            throw new BadRequestException(ErrorCode.INVALID_INPUT, "userId is required");
         }
         return ResponseEntity.ok(notificationService.getUnreadNotifications(userId));
     }
@@ -58,12 +60,8 @@ public class NotificationController {
         if (notificationService == null) {
             return ResponseEntity.ok(null);
         }
-        try {
-            Notification updated = notificationService.markAsRead(notificationId);
-            return ResponseEntity.ok(updated);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
+        Notification updated = notificationService.markAsRead(notificationId);
+        return ResponseEntity.ok(updated);
     }
 
     @PatchMapping("/read-all")
@@ -80,21 +78,17 @@ public class NotificationController {
         if (notificationService == null) {
             return ResponseEntity.noContent().build();
         }
-        try {
-            notificationService.deleteNotification(notificationId);
-            return ResponseEntity.noContent().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
+        notificationService.deleteNotification(notificationId);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/unread/count")
     public ResponseEntity<Long> getUnreadCount(@RequestParam("userId") String userId) {
-        if (userId == null || userId.isBlank()) {
-            return ResponseEntity.badRequest().build();
-        }
         if (notificationService == null) {
             return ResponseEntity.ok(0L);
+        }
+        if (userId == null || userId.isBlank()) {
+            throw new BadRequestException(ErrorCode.INVALID_INPUT, "userId is required");
         }
         return ResponseEntity.ok(notificationService.getUnreadCount(userId));
     }

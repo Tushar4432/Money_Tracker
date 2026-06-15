@@ -1,5 +1,8 @@
 package com.tracker.MoneyTracker.transaction;
 
+import com.tracker.MoneyTracker.error.ErrorCode;
+import com.tracker.MoneyTracker.exception.BadRequestException;
+import com.tracker.MoneyTracker.exception.InternalServerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +22,6 @@ public class TransactionController {
 
     private final TransactionService transactionService;
 
-    // Default constructor for framework / test support if needed
     public TransactionController() {
         this.transactionService = null;
     }
@@ -30,25 +32,25 @@ public class TransactionController {
     }
 
     @PostMapping("/upload")
-    public ResponseEntity<?> uploadStatement(
+    public ResponseEntity<Void> uploadStatement(
             @RequestParam("file") MultipartFile file,
             @RequestParam("userId") String userId) {
 
-        if (userId == null || userId.trim().isEmpty()) {
-            return ResponseEntity.badRequest().body("userId is required");
+        if (userId == null || userId.isBlank()) {
+            throw new BadRequestException(ErrorCode.INVALID_INPUT, "userId is required");
         }
         if (file == null || file.isEmpty()) {
-            return ResponseEntity.badRequest().body("File is empty");
+            throw new BadRequestException(ErrorCode.INVALID_INPUT, "File is empty");
         }
 
         String fileName = file.getOriginalFilename();
         if (fileName == null) {
-            return ResponseEntity.badRequest().body("Filename is null");
+            throw new BadRequestException(ErrorCode.INVALID_INPUT, "Filename is null");
         }
 
         String lowerName = fileName.toLowerCase();
         if (!lowerName.endsWith(".csv") && !lowerName.endsWith(".xlsx") && !lowerName.endsWith(".xls")) {
-            return ResponseEntity.badRequest().body("Unsupported file type");
+            throw new BadRequestException(ErrorCode.UNSUPPORTED_FILE_TYPE);
         }
 
         try {
@@ -64,34 +66,32 @@ public class TransactionController {
             } finally {
                 tempFile.delete();
             }
+        } catch (BadRequestException e) {
+            throw e;
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to process file: " + e.getMessage());
+            throw new InternalServerException(ErrorCode.INTERNAL_ERROR, e);
         }
     }
 
     @GetMapping
     public ResponseEntity<List<Transaction>> getTransactions(@RequestParam("userId") String userId) {
-        if (userId == null || userId.trim().isEmpty()) {
-            return ResponseEntity.badRequest().build();
-        }
         if (transactionService == null) {
             return ResponseEntity.ok(List.of());
         }
-        List<Transaction> transactions = transactionService.getTransactionsByUser(userId);
-        return ResponseEntity.ok(transactions);
+        if (userId == null || userId.isBlank()) {
+            throw new BadRequestException(ErrorCode.INVALID_INPUT, "userId is required");
+        }
+        return ResponseEntity.ok(transactionService.getTransactionsByUser(userId));
     }
 
     @GetMapping("/summary")
     public ResponseEntity<Map<String, BigDecimal>> getCategorySummary(@RequestParam("userId") String userId) {
-        if (userId == null || userId.trim().isEmpty()) {
-            return ResponseEntity.badRequest().build();
-        }
         if (transactionService == null) {
             return ResponseEntity.ok(Map.of());
         }
-        Map<String, BigDecimal> summary = transactionService.getCategorySummary(userId);
-        return ResponseEntity.ok(summary);
+        if (userId == null || userId.isBlank()) {
+            throw new BadRequestException(ErrorCode.INVALID_INPUT, "userId is required");
+        }
+        return ResponseEntity.ok(transactionService.getCategorySummary(userId));
     }
 }
-

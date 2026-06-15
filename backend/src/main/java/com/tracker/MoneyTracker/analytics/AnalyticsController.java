@@ -52,14 +52,28 @@ public class AnalyticsController {
     @GetMapping("/trends")
     public ResponseEntity<List<MonthlyTrend>> getMonthlyTrends(
             @RequestParam("userId") String userId,
-            @RequestParam(value = "months", defaultValue = "6") int months) {
+            @RequestParam(value = "periods", defaultValue = "6") int periods,
+            @RequestParam(value = "period", defaultValue = "MONTHLY") String period) {
         if (userId == null || userId.isBlank()) {
             return ResponseEntity.badRequest().build();
         }
         if (analyticsService == null) {
             return ResponseEntity.ok(List.of());
         }
-        return ResponseEntity.ok(analyticsService.getMonthlyTrends(userId, months));
+        return ResponseEntity.ok(analyticsService.getMonthlyTrends(userId, periods, period));
+    }
+
+    @GetMapping("/comparison")
+    public ResponseEntity<SpendingComparison> getSpendingComparison(
+            @RequestParam("userId") String userId,
+            @RequestParam(value = "period", defaultValue = "MONTHLY") String period) {
+        if (userId == null || userId.isBlank()) {
+            return ResponseEntity.badRequest().build();
+        }
+        if (analyticsService == null) {
+            return ResponseEntity.ok(null);
+        }
+        return ResponseEntity.ok(analyticsService.getSpendingComparison(userId, period));
     }
 
     @GetMapping("/budget")

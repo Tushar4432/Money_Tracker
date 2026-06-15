@@ -5,12 +5,10 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -18,28 +16,32 @@ public class AuthController {
 
     private final UserRegistrationService registrationService;
     private final AuthenticationManager authenticationManager;
+    private final JwtUtil jwtUtil;
 
     public AuthController(UserRegistrationService registrationService,
-                          AuthenticationManager authenticationManager) {
+                          AuthenticationManager authenticationManager,
+                          JwtUtil jwtUtil) {
         this.registrationService = registrationService;
         this.authenticationManager = authenticationManager;
+        this.jwtUtil = jwtUtil;
     }
 
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody AppUser appUser) {
+        if (appUser.getUuid() == null || appUser.getUuid().isBlank()) {
+            appUser.setUuid(UUID.randomUUID().toString());
+        }
         registrationService.addUser(appUser);
         return ResponseEntity.ok("User registered");
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody AppUser appUser) {
+    public ResponseEntity<?> login(@RequestBody AppUser appUser) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(appUser.getUsername(), appUser.getPassword())
         );
-        if (authentication.isAuthenticated()) {
-            return ResponseEntity.ok("Logged in");
-        }
-        return ResponseEntity.status(401).body("Invalid credentials");
+        String token = jwtUtil.generateToken(appUser.getUsername());
+        return ResponseEntity.ok(Map.of("token", token));
     }
 
     @DeleteMapping("/users/{username}")
@@ -50,11 +52,7 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<String> logout() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null) {
-            SecurityContextHolder.getContext().setAuthentication(null);
-        }
+        SecurityContextHolder.clearContext();
         return ResponseEntity.ok("Logged out");
     }
-
 }

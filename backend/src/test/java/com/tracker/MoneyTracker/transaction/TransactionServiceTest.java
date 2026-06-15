@@ -1,5 +1,6 @@
 package com.tracker.MoneyTracker.transaction;
 
+import com.tracker.MoneyTracker.exception.BadRequestException;
 import com.tracker.MoneyTracker.goal.SpendingGoal;
 import com.tracker.MoneyTracker.goal.SpendingGoalRepository;
 import com.tracker.MoneyTracker.notification.NotificationService;
@@ -193,7 +194,7 @@ class TransactionServiceTest {
         @DisplayName("Should throw exception when file is null")
         void shouldThrowException_WhenFileIsNull() {
             assertThatThrownBy(() -> sut.processStatement(null, "user-123"))
-                    .isInstanceOf(IllegalArgumentException.class);
+                    .isInstanceOf(BadRequestException.class);
         }
 
         @Test
@@ -201,7 +202,7 @@ class TransactionServiceTest {
         void shouldThrowException_WhenUserIdIsNull() throws Exception {
             java.io.File file = new java.io.File("src/test/resources/test-statement.xlsx");
             assertThatThrownBy(() -> sut.processStatement(file, null))
-                    .isInstanceOf(IllegalArgumentException.class);
+                    .isInstanceOf(BadRequestException.class);
         }
 
         @Test
@@ -209,7 +210,7 @@ class TransactionServiceTest {
         void shouldThrowException_WhenUserIdIsBlank() throws Exception {
             java.io.File file = new java.io.File("src/test/resources/test-statement.xlsx");
             assertThatThrownBy(() -> sut.processStatement(file, "  "))
-                    .isInstanceOf(IllegalArgumentException.class);
+                    .isInstanceOf(BadRequestException.class);
         }
     }
 
@@ -254,7 +255,7 @@ class TransactionServiceTest {
             LocalDate end = LocalDate.of(2026, 3, 1);
 
             assertThatThrownBy(() -> sut.getTransactionsByUserAndDateRange("user-123", start, end))
-                    .isInstanceOf(IllegalArgumentException.class);
+                    .isInstanceOf(BadRequestException.class);
         }
     }
 

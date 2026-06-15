@@ -1,5 +1,8 @@
 package com.tracker.MoneyTracker.notification;
 
+import com.tracker.MoneyTracker.error.ErrorCode;
+import com.tracker.MoneyTracker.exception.BadRequestException;
+import com.tracker.MoneyTracker.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -50,17 +53,14 @@ class NotificationControllerTest {
         @Test
         @DisplayName("Should create notification and return created status")
         void shouldCreate_AndReturnCreated() {
-            // Arrange
             Notification input = createNotification(null, "user-123", "GOAL_WARNING",
                     "Alert", "Msg", false);
             Notification saved = createNotification("notif-001", "user-123", "GOAL_WARNING",
                     "Alert", "Msg", false);
             given(notificationService.createNotification(any(Notification.class))).willReturn(saved);
 
-            // Act
             ResponseEntity<Notification> result = sut.createNotification(input);
 
-            // Assert
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.CREATED);
             assertThat(result.getBody()).isNotNull();
             assertThat(result.getBody().getId()).isEqualTo("notif-001");
@@ -74,25 +74,22 @@ class NotificationControllerTest {
         @Test
         @DisplayName("Should return notifications for user")
         void shouldReturnNotifications_ForUser() {
-            // Arrange
             List<Notification> notifications = List.of(
                     createNotification("n1", "user-123", "GOAL_WARNING", "Alert", "Msg", false)
             );
             given(notificationService.getNotificationsByUser("user-123")).willReturn(notifications);
 
-            // Act
             ResponseEntity<List<Notification>> result = sut.getNotifications("user-123");
 
-            // Assert
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(result.getBody()).hasSize(1);
         }
 
         @Test
-        @DisplayName("Should return bad request when userId is blank")
-        void shouldReturnBadRequest_WhenUserIdIsBlank() {
-            ResponseEntity<List<Notification>> result = sut.getNotifications("");
-            assertThat(result.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        @DisplayName("Should throw BadRequestException when userId is blank")
+        void shouldThrowBadRequest_WhenUserIdIsBlank() {
+            assertThatThrownBy(() -> sut.getNotifications(""))
+                    .isInstanceOf(BadRequestException.class);
         }
     }
 
@@ -103,25 +100,22 @@ class NotificationControllerTest {
         @Test
         @DisplayName("Should return unread notifications for user")
         void shouldReturnUnreadNotifications() {
-            // Arrange
             List<Notification> unread = List.of(
                     createNotification("n1", "user-123", "GOAL_WARNING", "Alert", "Msg", false)
             );
             given(notificationService.getUnreadNotifications("user-123")).willReturn(unread);
 
-            // Act
             ResponseEntity<List<Notification>> result = sut.getUnreadNotifications("user-123");
 
-            // Assert
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(result.getBody()).hasSize(1);
         }
 
         @Test
-        @DisplayName("Should return bad request when userId is blank")
-        void shouldReturnBadRequest_WhenUserIdIsBlank() {
-            ResponseEntity<List<Notification>> result = sut.getUnreadNotifications("");
-            assertThat(result.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        @DisplayName("Should throw BadRequestException when userId is blank")
+        void shouldThrowBadRequest_WhenUserIdIsBlank() {
+            assertThatThrownBy(() -> sut.getUnreadNotifications(""))
+                    .isInstanceOf(BadRequestException.class);
         }
     }
 
@@ -132,29 +126,25 @@ class NotificationControllerTest {
         @Test
         @DisplayName("Should mark notification as read and return ok")
         void shouldMarkAsRead_AndReturnOk() {
-            // Arrange
             Notification n = createNotification("notif-001", "user-123", "GOAL_WARNING",
                     "Alert", "Msg", true);
             given(notificationService.markAsRead("notif-001")).willReturn(n);
 
-            // Act
             ResponseEntity<Notification> result = sut.markAsRead("notif-001");
 
-            // Assert
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(result.getBody()).isNotNull();
             assertThat(result.getBody().isRead()).isTrue();
         }
 
         @Test
-        @DisplayName("Should return not found when notification does not exist")
-        void shouldReturnNotFound_WhenDoesNotExist() {
+        @DisplayName("Should throw ResourceNotFoundException when notification does not exist")
+        void shouldThrowNotFound_WhenDoesNotExist() {
             given(notificationService.markAsRead("nonexistent"))
-                    .willThrow(new IllegalArgumentException("Notification not found"));
+                    .willThrow(new ResourceNotFoundException(ErrorCode.NOTIFICATION_NOT_FOUND, "nonexistent"));
 
-            ResponseEntity<Notification> result = sut.markAsRead("nonexistent");
-
-            assertThat(result.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+            assertThatThrownBy(() -> sut.markAsRead("nonexistent"))
+                    .isInstanceOf(ResourceNotFoundException.class);
         }
     }
 
@@ -165,13 +155,10 @@ class NotificationControllerTest {
         @Test
         @DisplayName("Should mark all as read and return no content")
         void shouldMarkAllAsRead_AndReturnNoContent() {
-            // Arrange
             willDoNothing().given(notificationService).markAllAsRead("user-123");
 
-            // Act
             ResponseEntity<Void> result = sut.markAllAsRead("user-123");
 
-            // Assert
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
         }
     }
@@ -183,25 +170,21 @@ class NotificationControllerTest {
         @Test
         @DisplayName("Should delete notification and return no content")
         void shouldDelete_AndReturnNoContent() {
-            // Arrange
             willDoNothing().given(notificationService).deleteNotification("notif-001");
 
-            // Act
             ResponseEntity<Void> result = sut.deleteNotification("notif-001");
 
-            // Assert
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
         }
 
         @Test
-        @DisplayName("Should return not found when notification does not exist")
-        void shouldReturnNotFound_WhenDoesNotExist() {
-            willThrow(new IllegalArgumentException("Notification not found"))
+        @DisplayName("Should throw ResourceNotFoundException when notification does not exist")
+        void shouldThrowNotFound_WhenDoesNotExist() {
+            willThrow(new ResourceNotFoundException(ErrorCode.NOTIFICATION_NOT_FOUND, "nonexistent"))
                     .given(notificationService).deleteNotification("nonexistent");
 
-            ResponseEntity<Void> result = sut.deleteNotification("nonexistent");
-
-            assertThat(result.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+            assertThatThrownBy(() -> sut.deleteNotification("nonexistent"))
+                    .isInstanceOf(ResourceNotFoundException.class);
         }
     }
 
@@ -212,22 +195,19 @@ class NotificationControllerTest {
         @Test
         @DisplayName("Should return unread count for user")
         void shouldReturnUnreadCount() {
-            // Arrange
             given(notificationService.getUnreadCount("user-123")).willReturn(3L);
 
-            // Act
             ResponseEntity<Long> result = sut.getUnreadCount("user-123");
 
-            // Assert
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(result.getBody()).isEqualTo(3L);
         }
 
         @Test
-        @DisplayName("Should return bad request when userId is blank")
-        void shouldReturnBadRequest_WhenUserIdIsBlank() {
-            ResponseEntity<Long> result = sut.getUnreadCount("");
-            assertThat(result.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        @DisplayName("Should throw BadRequestException when userId is blank")
+        void shouldThrowBadRequest_WhenUserIdIsBlank() {
+            assertThatThrownBy(() -> sut.getUnreadCount(""))
+                    .isInstanceOf(BadRequestException.class);
         }
     }
 }

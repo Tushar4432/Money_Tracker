@@ -100,39 +100,122 @@ public class AnalyticsService {
      * Returns month-by-month income/expense/net trends for the last N months.
      */
     public List<MonthlyTrend> getMonthlyTrends(String userId, int months) {
-        if (months <= 0) {
-            months = 6;
+        return getMonthlyTrends(userId, months, "MONTHLY");
+    }
+
+    /**
+     * Returns income/expense/net trends grouped by the specified period.
+     * Supports MONTHLY, QUARTERLY, HALF_YEARLY, YEARLY.
+     */
+    public List<MonthlyTrend> getMonthlyTrends(String userId, int periods, String period) {
+        if (periods <= 0) {
+            periods = getDefaultPeriods(period);
         }
+        String effectivePeriod = (period == null || period.isBlank()) ? "MONTHLY" : period.toUpperCase();
 
         List<Transaction> transactions = getTransactions(userId);
-        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM");
 
-        // Group by year-month
-        Map<String, List<Transaction>> byMonth = transactions.stream()
+        // Group transactions by period key
+        Map<String, List<Transaction>> byPeriod = transactions.stream()
                 .filter(t -> t.getTransactionDate() != null)
-                .collect(Collectors.groupingBy(t -> t.getTransactionDate().format(fmt)));
+                .collect(Collectors.groupingBy(t -> getPeriodKey(t.getTransactionDate(), effectivePeriod)));
 
-        // Generate the last N months in order
+        // Generate the last N period labels in order
+        List<String> periodLabels = generatePeriodLabels(periods, effectivePeriod);
+
         List<MonthlyTrend> trends = new ArrayList<>();
-        LocalDate now = LocalDate.now();
-        for (int i = months - 1; i >= 0; i--) {
-            LocalDate monthDate = now.minusMonths(i);
-            String monthKey = monthDate.format(fmt);
-
-            List<Transaction> monthTxns = byMonth.getOrDefault(monthKey, List.of());
-            BigDecimal income = monthTxns.stream()
+        for (String label : periodLabels) {
+            List<Transaction> periodTxns = byPeriod.getOrDefault(label, List.of());
+            BigDecimal income = periodTxns.stream()
                     .filter(t -> "CREDIT".equals(t.getType()))
                     .map(Transaction::getAmount)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
-            BigDecimal expense = monthTxns.stream()
+            BigDecimal expense = periodTxns.stream()
                     .filter(t -> "DEBIT".equals(t.getType()))
                     .map(Transaction::getAmount)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-            trends.add(new MonthlyTrend(monthKey, income, expense, income.subtract(expense)));
+            trends.add(new MonthlyTrend(label, income, expense, income.subtract(expense)));
         }
 
         return trends;
+    }
+
+    /**
+     * Compares current period spending against the previous period.
+     * Returns overall totals plus per-category breakdown of changes.
+     */
+    public SpendingComparison getSpendingComparison(String userId, String period) {
+        String effectivePeriod = (period == null || period.isBlank()) ? "MONTHLY" : period.toUpperCase();
+
+        // Determine current and previous period date ranges
+        LocalDate[] currentRange = getCurrentPeriodRange(effectivePeriod);
+        LocalDate[] previousRange = getPreviousPeriodRange(effectivePeriod);
+
+        String currentLabel = getPeriodLabel(currentRange[0], effectivePeriod);
+        String previousLabel = getPeriodLabel(previousRange[0], effectivePeriod);
+
+        List<Transaction> currentTxns = getTransactionsForDateRange(userId, currentRange[0], currentRange[1]);
+        List<Transaction> previousTxns = getTransactionsForDateRange(userId, previousRange[0], previousRange[1]);
+
+        BigDecimal currentTotal = currentTxns.stream()
+                .filter(t -> "DEBIT".equals(t.getType()))
+                .map(Transaction::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal previousTotal = previousTxns.stream()
+                .filter(t -> "DEBIT".equals(t.getType()))
+                .map(Transaction::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal changeAmount = currentTotal.subtract(previousTotal);
+        double changePercentage = previousTotal.compareTo(BigDecimal.ZERO) > 0
+                ? changeAmount.multiply(BigDecimal.valueOf(100))
+                        .divide(previousTotal, 2, RoundingMode.HALF_UP)
+                        .doubleValue()
+                : (currentTotal.compareTo(BigDecimal.ZERO) > 0 ? 100.0 : 0.0);
+
+        // Per-category comparison
+        Map<String, BigDecimal> currentByCategory = currentTxns.stream()
+                .filter(t -> "DEBIT".equals(t.getType()))
+                .filter(t -> t.getCategory() != null)
+                .collect(Collectors.groupingBy(
+                        Transaction::getCategory,
+                        Collectors.reducing(BigDecimal.ZERO, Transaction::getAmount, BigDecimal::add)
+                ));
+
+        Map<String, BigDecimal> previousByCategory = previousTxns.stream()
+                .filter(t -> "DEBIT".equals(t.getType()))
+                .filter(t -> t.getCategory() != null)
+                .collect(Collectors.groupingBy(
+                        Transaction::getCategory,
+                        Collectors.reducing(BigDecimal.ZERO, Transaction::getAmount, BigDecimal::add)
+                ));
+
+        Set<String> allCategories = new HashSet<>();
+        allCategories.addAll(currentByCategory.keySet());
+        allCategories.addAll(previousByCategory.keySet());
+
+        List<CategoryChange> categoryChanges = allCategories.stream()
+                .map(cat -> {
+                    BigDecimal curr = currentByCategory.getOrDefault(cat, BigDecimal.ZERO);
+                    BigDecimal prev = previousByCategory.getOrDefault(cat, BigDecimal.ZERO);
+                    BigDecimal catChange = curr.subtract(prev);
+                    double catPct = prev.compareTo(BigDecimal.ZERO) > 0
+                            ? catChange.multiply(BigDecimal.valueOf(100))
+                                    .divide(prev, 2, RoundingMode.HALF_UP)
+                                    .doubleValue()
+                            : (curr.compareTo(BigDecimal.ZERO) > 0 ? 100.0 : 0.0);
+                    return new CategoryChange(cat, curr, prev, catChange, catPct);
+                })
+                .sorted((a, b) -> b.changeAmount().abs().compareTo(a.changeAmount().abs()))
+                .collect(Collectors.toList());
+
+        return new SpendingComparison(
+                currentLabel, previousLabel,
+                currentTotal, previousTotal,
+                changeAmount, changePercentage,
+                categoryChanges
+        );
     }
 
     /**
@@ -183,5 +266,109 @@ public class AnalyticsService {
             return transactionRepository.findByUserIdAndTransactionDateBetween(userId, start, end);
         }
         return transactionRepository.findByUserId(userId);
+    }
+
+    // ---- Period helpers ----
+
+    private int getDefaultPeriods(String period) {
+        return switch (period) {
+            case "QUARTERLY" -> 4;
+            case "HALF_YEARLY" -> 4;
+            case "YEARLY" -> 3;
+            default -> 6;
+        };
+    }
+
+    private String getPeriodKey(LocalDate date, String period) {
+        return switch (period) {
+            case "QUARTERLY" -> {
+                int quarter = (date.getMonthValue() - 1) / 3 + 1;
+                yield date.getYear() + "-Q" + quarter;
+            }
+            case "HALF_YEARLY" -> {
+                int half = date.getMonthValue() <= 6 ? 1 : 2;
+                yield date.getYear() + "-H" + half;
+            }
+            case "YEARLY" -> String.valueOf(date.getYear());
+            default -> date.format(DateTimeFormatter.ofPattern("yyyy-MM"));
+        };
+    }
+
+    private String getPeriodLabel(LocalDate date, String period) {
+        return getPeriodKey(date, period);
+    }
+
+    private List<String> generatePeriodLabels(int periods, String period) {
+        List<String> labels = new ArrayList<>();
+        LocalDate now = LocalDate.now();
+        for (int i = periods - 1; i >= 0; i--) {
+            LocalDate anchor = switch (period) {
+                case "QUARTERLY" -> now.minusMonths((long) i * 3);
+                case "HALF_YEARLY" -> now.minusMonths((long) i * 6);
+                case "YEARLY" -> now.minusYears(i);
+                default -> now.minusMonths(i);
+            };
+            labels.add(getPeriodKey(anchor, period));
+        }
+        return labels;
+    }
+
+    private LocalDate[] getCurrentPeriodRange(String period) {
+        LocalDate now = LocalDate.now();
+        return switch (period) {
+            case "QUARTERLY" -> {
+                int quarter = (now.getMonthValue() - 1) / 3 + 1;
+                int startMonth = (quarter - 1) * 3 + 1;
+                yield new LocalDate[]{
+                        LocalDate.of(now.getYear(), startMonth, 1),
+                        LocalDate.of(now.getYear(), startMonth, 1).plusMonths(3).minusDays(1)
+                };
+            }
+            case "HALF_YEARLY" -> {
+                if (now.getMonthValue() <= 6) {
+                    yield new LocalDate[]{LocalDate.of(now.getYear(), 1, 1), LocalDate.of(now.getYear(), 6, 30)};
+                } else {
+                    yield new LocalDate[]{LocalDate.of(now.getYear(), 7, 1), LocalDate.of(now.getYear(), 12, 31)};
+                }
+            }
+            case "YEARLY" -> new LocalDate[]{
+                    LocalDate.of(now.getYear(), 1, 1),
+                    LocalDate.of(now.getYear(), 12, 31)
+            };
+            default -> new LocalDate[]{
+                    now.withDayOfMonth(1),
+                    now.withDayOfMonth(1).plusMonths(1).minusDays(1)
+            };
+        };
+    }
+
+    private LocalDate[] getPreviousPeriodRange(String period) {
+        LocalDate now = LocalDate.now();
+        return switch (period) {
+            case "QUARTERLY" -> {
+                int quarter = (now.getMonthValue() - 1) / 3 + 1;
+                int startMonth = (quarter - 1) * 3 + 1;
+                LocalDate currStart = LocalDate.of(now.getYear(), startMonth, 1);
+                LocalDate prevEnd = currStart.minusDays(1);
+                LocalDate prevStart = prevEnd.withDayOfMonth(1).minusMonths(2);
+                yield new LocalDate[]{prevStart, prevEnd};
+            }
+            case "HALF_YEARLY" -> {
+                if (now.getMonthValue() <= 6) {
+                    yield new LocalDate[]{LocalDate.of(now.getYear() - 1, 7, 1), LocalDate.of(now.getYear() - 1, 12, 31)};
+                } else {
+                    yield new LocalDate[]{LocalDate.of(now.getYear(), 1, 1), LocalDate.of(now.getYear(), 6, 30)};
+                }
+            }
+            case "YEARLY" -> new LocalDate[]{
+                    LocalDate.of(now.getYear() - 1, 1, 1),
+                    LocalDate.of(now.getYear() - 1, 12, 31)
+            };
+            default -> {
+                LocalDate prevEnd = now.withDayOfMonth(1).minusDays(1);
+                LocalDate prevStart = prevEnd.withDayOfMonth(1);
+                yield new LocalDate[]{prevStart, prevEnd};
+            }
+        };
     }
 }

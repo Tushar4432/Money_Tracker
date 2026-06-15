@@ -1,5 +1,7 @@
 package com.tracker.MoneyTracker.goal;
 
+import com.tracker.MoneyTracker.error.ErrorCode;
+import com.tracker.MoneyTracker.exception.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,22 +35,22 @@ public class GoalController {
 
     @GetMapping
     public ResponseEntity<List<SpendingGoal>> getGoals(@RequestParam("userId") String userId) {
-        if (userId == null || userId.isBlank()) {
-            return ResponseEntity.badRequest().build();
-        }
         if (goalService == null) {
             return ResponseEntity.ok(List.of());
+        }
+        if (userId == null || userId.isBlank()) {
+            throw new BadRequestException(ErrorCode.INVALID_INPUT, "userId is required");
         }
         return ResponseEntity.ok(goalService.getGoalsByUser(userId));
     }
 
     @GetMapping("/active")
     public ResponseEntity<List<SpendingGoal>> getActiveGoals(@RequestParam("userId") String userId) {
-        if (userId == null || userId.isBlank()) {
-            return ResponseEntity.badRequest().build();
-        }
         if (goalService == null) {
             return ResponseEntity.ok(List.of());
+        }
+        if (userId == null || userId.isBlank()) {
+            throw new BadRequestException(ErrorCode.INVALID_INPUT, "userId is required");
         }
         return ResponseEntity.ok(goalService.getActiveGoalsByUser(userId));
     }
@@ -59,12 +61,8 @@ public class GoalController {
         if (goalService == null) {
             return ResponseEntity.ok(goal);
         }
-        try {
-            SpendingGoal updated = goalService.updateGoal(goalId, goal);
-            return ResponseEntity.ok(updated);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
+        SpendingGoal updated = goalService.updateGoal(goalId, goal);
+        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{goalId}")
@@ -72,12 +70,8 @@ public class GoalController {
         if (goalService == null) {
             return ResponseEntity.noContent().build();
         }
-        try {
-            goalService.deleteGoal(goalId);
-            return ResponseEntity.noContent().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
+        goalService.deleteGoal(goalId);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{goalId}/progress")
@@ -85,11 +79,7 @@ public class GoalController {
         if (goalService == null) {
             return ResponseEntity.ok(null);
         }
-        try {
-            GoalProgress progress = goalService.getGoalProgress(goalId);
-            return ResponseEntity.ok(progress);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
+        GoalProgress progress = goalService.getGoalProgress(goalId);
+        return ResponseEntity.ok(progress);
     }
 }

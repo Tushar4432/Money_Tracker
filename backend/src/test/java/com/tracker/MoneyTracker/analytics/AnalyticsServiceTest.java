@@ -356,4 +356,217 @@ class AnalyticsServiceTest {
             assertThat(budget).isEmpty();
         }
     }
+
+    @Nested
+    @DisplayName("getMonthlyTrends with period grouping")
+    class GetMonthlyTrendsWithPeriodTests {
+
+        @Test
+        @DisplayName("Should return quarterly trends when period is QUARTERLY")
+        void shouldReturnQuarterlyTrends_WhenPeriodIsQuarterly() {
+            // Arrange
+            String userId = "user-123";
+            LocalDate now = LocalDate.now();
+            List<Transaction> transactions = List.of(
+                    createTransaction("t1", userId, now, new BigDecimal("300.00"), "DEBIT", "FOOD", "Swiggy")
+            );
+            given(transactionRepository.findByUserId(userId)).willReturn(transactions);
+
+            // Act
+            var trends = sut.getMonthlyTrends(userId, 4, "QUARTERLY");
+
+            // Assert
+            assertThat(trends).hasSize(4);
+            assertThat(trends).allMatch(t -> t.month().contains("Q"));
+        }
+
+        @Test
+        @DisplayName("Should return half-yearly trends when period is HALF_YEARLY")
+        void shouldReturnHalfYearlyTrends_WhenPeriodIsHalfYearly() {
+            // Arrange
+            String userId = "user-123";
+            LocalDate now = LocalDate.now();
+            List<Transaction> transactions = List.of(
+                    createTransaction("t1", userId, now, new BigDecimal("500.00"), "DEBIT", "RENT", "Rent")
+            );
+            given(transactionRepository.findByUserId(userId)).willReturn(transactions);
+
+            // Act
+            var trends = sut.getMonthlyTrends(userId, 4, "HALF_YEARLY");
+
+            // Assert
+            assertThat(trends).hasSize(4);
+            assertThat(trends).allMatch(t -> t.month().contains("H"));
+        }
+
+        @Test
+        @DisplayName("Should return yearly trends when period is YEARLY")
+        void shouldReturnYearlyTrends_WhenPeriodIsYearly() {
+            // Arrange
+            String userId = "user-123";
+            LocalDate now = LocalDate.now();
+            List<Transaction> transactions = List.of(
+                    createTransaction("t1", userId, now, new BigDecimal("1000.00"), "DEBIT", "RENT", "Rent")
+            );
+            given(transactionRepository.findByUserId(userId)).willReturn(transactions);
+
+            // Act
+            var trends = sut.getMonthlyTrends(userId, 3, "YEARLY");
+
+            // Assert
+            assertThat(trends).hasSize(3);
+            assertThat(trends).allMatch(t -> t.month().matches("\\d{4}"));
+        }
+
+        @Test
+        @DisplayName("Should default to MONTHLY when period is null")
+        void shouldDefaultToMonthly_WhenPeriodIsNull() {
+            // Arrange
+            String userId = "user-123";
+            given(transactionRepository.findByUserId(userId)).willReturn(List.of());
+
+            // Act
+            var trends = sut.getMonthlyTrends(userId, 6, null);
+
+            // Assert
+            assertThat(trends).hasSize(6);
+            assertThat(trends).allMatch(t -> t.month().contains("-"));
+        }
+    }
+
+    @Nested
+    @DisplayName("getSpendingComparison")
+    class GetSpendingComparisonTests {
+
+        @Test
+        @DisplayName("Should compare current vs previous month with default period")
+        void shouldCompareCurrentVsPreviousMonth_WithDefaultPeriod() {
+            // Arrange
+            String userId = "user-123";
+            LocalDate now = LocalDate.now();
+            LocalDate prevMonth = now.minusMonths(1);
+
+            List<Transaction> currentTxns = List.of(
+                    createTransaction("t1", userId, now, new BigDecimal("500.00"), "DEBIT", "FOOD", "Swiggy")
+            );
+            List<Transaction> prevTxns = List.of(
+                    createTransaction("t2", userId, prevMonth, new BigDecimal("300.00"), "DEBIT", "FOOD", "Zomato")
+            );
+
+            given(transactionRepository.findByUserIdAndTransactionDateBetween(eq(userId), any(LocalDate.class), any(LocalDate.class)))
+                    .willReturn(currentTxns)
+                    .willReturn(prevTxns);
+
+            // Act
+            var comparison = sut.getSpendingComparison(userId, null);
+
+            // Assert
+            assertThat(comparison).isNotNull();
+            assertThat(comparison.currentTotal()).isEqualByComparingTo(new BigDecimal("500.00"));
+            assertThat(comparison.previousTotal()).isEqualByComparingTo(new BigDecimal("300.00"));
+        }
+
+        @Test
+        @DisplayName("Should show increase when current period spending is higher")
+        void shouldShowIncrease_WhenCurrentPeriodSpendingHigher() {
+            // Arrange
+            String userId = "user-123";
+            LocalDate now = LocalDate.now();
+            LocalDate prevMonth = now.minusMonths(1);
+
+            List<Transaction> currentTxns = List.of(
+                    createTransaction("t1", userId, now, new BigDecimal("800.00"), "DEBIT", "FOOD", "Swiggy")
+            );
+            List<Transaction> prevTxns = List.of(
+                    createTransaction("t2", userId, prevMonth, new BigDecimal("500.00"), "DEBIT", "FOOD", "Zomato")
+            );
+
+            given(transactionRepository.findByUserIdAndTransactionDateBetween(eq(userId), any(LocalDate.class), any(LocalDate.class)))
+                    .willReturn(currentTxns)
+                    .willReturn(prevTxns);
+
+            // Act
+            var comparison = sut.getSpendingComparison(userId, null);
+
+            // Assert
+            assertThat(comparison.changeAmount()).isPositive();
+            assertThat(comparison.changePercentage()).isPositive();
+            assertThat(comparison.changeAmount()).isEqualByComparingTo(new BigDecimal("300.00"));
+        }
+
+        @Test
+        @DisplayName("Should show decrease when current period spending is lower")
+        void shouldShowDecrease_WhenCurrentPeriodSpendingLower() {
+            // Arrange
+            String userId = "user-123";
+            LocalDate now = LocalDate.now();
+            LocalDate prevMonth = now.minusMonths(1);
+
+            List<Transaction> currentTxns = List.of(
+                    createTransaction("t1", userId, now, new BigDecimal("200.00"), "DEBIT", "FOOD", "Swiggy")
+            );
+            List<Transaction> prevTxns = List.of(
+                    createTransaction("t2", userId, prevMonth, new BigDecimal("600.00"), "DEBIT", "FOOD", "Zomato")
+            );
+
+            given(transactionRepository.findByUserIdAndTransactionDateBetween(eq(userId), any(LocalDate.class), any(LocalDate.class)))
+                    .willReturn(currentTxns)
+                    .willReturn(prevTxns);
+
+            // Act
+            var comparison = sut.getSpendingComparison(userId, null);
+
+            // Assert
+            assertThat(comparison.changeAmount()).isNegative();
+            assertThat(comparison.changePercentage()).isNegative();
+        }
+
+        @Test
+        @DisplayName("Should return category-level changes in comparison")
+        void shouldReturnCategoryLevelChanges_InComparison() {
+            // Arrange
+            String userId = "user-123";
+            LocalDate now = LocalDate.now();
+            LocalDate prevMonth = now.minusMonths(1);
+
+            List<Transaction> currentTxns = List.of(
+                    createTransaction("t1", userId, now, new BigDecimal("400.00"), "DEBIT", "FOOD", "Swiggy"),
+                    createTransaction("t2", userId, now, new BigDecimal("200.00"), "DEBIT", "TRANSPORT", "Uber")
+            );
+            List<Transaction> prevTxns = List.of(
+                    createTransaction("t3", userId, prevMonth, new BigDecimal("300.00"), "DEBIT", "FOOD", "Zomato"),
+                    createTransaction("t4", userId, prevMonth, new BigDecimal("100.00"), "DEBIT", "TRANSPORT", "Ola")
+            );
+
+            given(transactionRepository.findByUserIdAndTransactionDateBetween(eq(userId), any(LocalDate.class), any(LocalDate.class)))
+                    .willReturn(currentTxns)
+                    .willReturn(prevTxns);
+
+            // Act
+            var comparison = sut.getSpendingComparison(userId, null);
+
+            // Assert
+            assertThat(comparison.categoryComparisons()).isNotEmpty();
+            assertThat(comparison.categoryComparisons()).anyMatch(c -> "FOOD".equals(c.category()));
+            assertThat(comparison.categoryComparisons()).anyMatch(c -> "TRANSPORT".equals(c.category()));
+        }
+
+        @Test
+        @DisplayName("Should handle gracefully when no transactions")
+        void shouldHandleGracefully_WhenNoTransactions() {
+            // Arrange
+            String userId = "user-123";
+            given(transactionRepository.findByUserIdAndTransactionDateBetween(eq(userId), any(LocalDate.class), any(LocalDate.class)))
+                    .willReturn(List.of());
+
+            // Act
+            var comparison = sut.getSpendingComparison(userId, null);
+
+            // Assert
+            assertThat(comparison).isNotNull();
+            assertThat(comparison.currentTotal()).isEqualByComparingTo(BigDecimal.ZERO);
+            assertThat(comparison.previousTotal()).isEqualByComparingTo(BigDecimal.ZERO);
+            assertThat(comparison.changeAmount()).isEqualByComparingTo(BigDecimal.ZERO);
+        }
+    }
 }

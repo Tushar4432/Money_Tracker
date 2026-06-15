@@ -1,5 +1,7 @@
 package com.tracker.MoneyTracker.transaction;
 
+import com.tracker.MoneyTracker.error.ErrorCode;
+import com.tracker.MoneyTracker.exception.BadRequestException;
 import com.tracker.MoneyTracker.goal.SpendingGoal;
 import com.tracker.MoneyTracker.goal.SpendingGoalRepository;
 import com.tracker.MoneyTracker.notification.Notification;
@@ -58,7 +60,7 @@ public class TransactionService {
 
     public List<Transaction> processStatement(File file, String userId) throws Exception {
         if (file == null || userId == null || userId.trim().isEmpty()) {
-            throw new IllegalArgumentException("File and userId must not be null/blank");
+            throw new BadRequestException(ErrorCode.INVALID_INPUT, "File and userId must not be null/blank");
         }
 
         List<Map<String, String>> parsedRows;
@@ -68,7 +70,7 @@ public class TransactionService {
         } else if (fileName.endsWith(".xlsx") || fileName.endsWith(".xls")) {
             parsedRows = fileParser.parseExcel(file);
         } else {
-            throw new IllegalArgumentException("Unsupported file type");
+            throw new BadRequestException(ErrorCode.UNSUPPORTED_FILE_TYPE);
         }
 
         List<Transaction> transactions = new ArrayList<>();
@@ -149,7 +151,7 @@ public class TransactionService {
 
     public List<Transaction> getTransactionsByUserAndDateRange(String userId, LocalDate start, LocalDate end) {
         if (start != null && end != null && start.isAfter(end)) {
-            throw new IllegalArgumentException("Start date cannot be after end date");
+            throw new BadRequestException(ErrorCode.INVALID_DATE_RANGE);
         }
         if (transactionRepository == null) {
             return List.of();

@@ -10,4 +10,8 @@ server:
   servlet:
     contextPath: /money_tracker
 
+jwt:
+  secret: dGhpcyBpcyBhIHZlcnkgc2VjdXJlIHNlY3JldCBrZXkgZm9yIEpXVCB0b2tlbiBnZW5lcmF0aW9uIGFuZCB2YWxpZGF0aW9u
+  expiration: 86400000
+
 

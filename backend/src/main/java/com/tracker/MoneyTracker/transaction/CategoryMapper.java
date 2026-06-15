@@ -19,51 +19,83 @@ public class CategoryMapper {
         categoryKeywords = new LinkedHashMap<>();
 
         categoryKeywords.put("FOOD", List.of(
-                "swiggy", "zomato"
+                "swiggy", "zomato", "dominos", "pizza hut", "kfc", "mcdonalds",
+                "cafe coffee", "starbucks", "biryani", "dhaba", "restaurant",
+                "food", "eatery", "snack", "juice", "bakery", "cake", "sweet",
+                "grocery", "bigbasket", "zepto", "blinkit", "dmart",
+                "reliance fresh", "more supermarket"
         ));
 
         categoryKeywords.put("WEB_SHOPPING", List.of(
-                "amazon", "flipkart"
+                "amazon", "flipkart", "myntra", "ajio", "meesho", "snapdeal",
+                "shopclues", "tatacliq", "nykaa"
         ));
 
         categoryKeywords.put("SUBSCRIPTION", List.of(
-                "netflix", "spotify"
+                "netflix", "spotify", "prime video", "hotstar", "disney",
+                "youtube premium", "jio cinema", "sony liv", "zee5",
+                "apple music", "google play", "adobe", "microsoft 365"
         ));
 
         categoryKeywords.put("TRANSPORT", List.of(
-                "irctc", "indianoil", "petrol", "fuel"
+                "irctc", "uber", "ola", "rapido", "metro", "petrol", "fuel",
+                "diesel", "indianoil", "hpcl", "bharatpetroleum", "shell",
+                "parking", "toll", "fastag", "nhai"
         ));
 
         categoryKeywords.put("HEALTH", List.of(
-                "apollo", "pharmacy", "hospital", "clinic"
+                "apollo", "pharmacy", "hospital", "clinic", "doctor", "medical",
+                "medicine", "pharmeasy", "netmeds", "1mg", "health", "dental",
+                "eye care", "diagnostic", "lab test"
         ));
 
         categoryKeywords.put("UTILITIES", List.of(
-                "electricity", "bill"
+                "electricity", "water", "gas", "bill", "airtel", "jio", "vi",
+                "bsnl", "broadband", "wifi", "fiber", "act", "hathway",
+                "tata sky", "dth"
         ));
 
         categoryKeywords.put("INCOME", List.of(
-                "salary"
-        ));
-
-        categoryKeywords.put("TRANSFER", List.of(
-                "person", "transfer", "neft", "imps"
+                "salary", "credit interest", "refund", "dividend",
+                "reimbursement", "cashback", "reward"
         ));
 
         categoryKeywords.put("INVESTMENT", List.of(
-                "zerodha"
+                "zerodha", "groww", "upstox", "angel one", "kuvera", "coin",
+                "mutual fund", "sip", "stock", "share market", "etmoney", "smallcase"
         ));
 
         categoryKeywords.put("RENT", List.of(
-                "rent"
+                "rent", "hostel", "pg", "accommodation", "flat rent", "house rent"
         ));
 
         categoryKeywords.put("ENTERTAINMENT", List.of(
-                "pvr"
+                "pvr", "inox", "cinepolis", "bookmyshow", "gaming",
+                "playstation", "xbox", "steam"
         ));
 
         categoryKeywords.put("EDUCATION", List.of(
-                "coursera"
+                "coursera", "udemy", "byju", "unacademy", "vedantu",
+                "physics wallah", "toppr", "edx", "skillshare",
+                "linkedin learning", "tuition", "coaching"
+        ));
+
+        categoryKeywords.put("INSURANCE", List.of(
+                "lic", "insurance", "policy", "premium",
+                "hdfc life", "icici prudential", "sbi life", "max life"
+        ));
+
+        categoryKeywords.put("EMI", List.of(
+                "emi", "loan", "home loan", "car loan", "personal loan",
+                "bajaj finance", "hdfc loan"
+        ));
+
+        // TRANSFER must be checked LAST (before OTHER) because keywords like
+        // "upi" appear in almost every Indian transaction description.
+        categoryKeywords.put("TRANSFER", List.of(
+                "neft", "imps", "rtgs", "paytm", "phonepe",
+                "google pay", "gpay", "paypal", "bank transfer",
+                "person", "transfer"
         ));
     }
 

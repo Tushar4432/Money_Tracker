@@ -130,10 +130,10 @@ class AnalyticsControllerTest {
                     new MonthlyTrend("2026-01", new BigDecimal("5000"), new BigDecimal("300"), new BigDecimal("4700")),
                     new MonthlyTrend("2026-02", new BigDecimal("5000"), new BigDecimal("400"), new BigDecimal("4600"))
             );
-            given(analyticsService.getMonthlyTrends("user-123", 6)).willReturn(trends);
+            given(analyticsService.getMonthlyTrends("user-123", 6, "MONTHLY")).willReturn(trends);
 
             // Act
-            ResponseEntity<List<MonthlyTrend>> result = sut.getMonthlyTrends("user-123", 6);
+            ResponseEntity<List<MonthlyTrend>> result = sut.getMonthlyTrends("user-123", 6, "MONTHLY");
 
             // Assert
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -144,7 +144,7 @@ class AnalyticsControllerTest {
         @Test
         @DisplayName("Should return bad request when userId is blank")
         void shouldReturnBadRequest_WhenUserIdIsBlank() {
-            ResponseEntity<List<MonthlyTrend>> result = sut.getMonthlyTrends("", 6);
+            ResponseEntity<List<MonthlyTrend>> result = sut.getMonthlyTrends("", 6, "MONTHLY");
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         }
     }
