@@ -21,7 +21,7 @@ public class TransactionService {
     public TransactionService() {
         this.transactionRepository = null;
         this.fileParser = new FileParser();
-        this.categoryClassifier = new CategoryClassifier();
+        this.categoryClassifier = new CategoryClassifier(new CategoryMapper());
     }
 
     @Autowired
@@ -50,12 +50,11 @@ public class TransactionService {
 
         List<Transaction> transactions = new ArrayList<>();
         for (Map<String, String> row : parsedRows) {
-            Transaction tx = new Transaction();
-            tx.setId(UUID.randomUUID().toString());
-            tx.setUserId(userId);
-
             String dateStr = row.get("date");
-            tx.setTransactionDate(parseDate(dateStr));
+            LocalDate date = parseDate(dateStr);
+            if (date == null) {
+                continue; // skip rows with unparseable dates
+            }
 
             String debitVal = row.get("debit");
             String creditVal = row.get("credit");
@@ -87,15 +86,22 @@ public class TransactionService {
                 type = "DEBIT";
             }
 
+            String details = row.get("details");
+            String description = cleanDescription(details);
+            if (description == null || description.isBlank()) {
+                description = "Unknown";
+            }
+
+            Transaction tx = new Transaction();
+            tx.setId(UUID.randomUUID().toString());
+            tx.setUserId(userId);
+            tx.setTransactionDate(date);
             tx.setAmount(amount.abs());
             tx.setType(type);
-
-            String details = row.get("details");
-            tx.setDescription(cleanDescription(details));
+            tx.setDescription(description);
             tx.setOriginalDetail(details);
             tx.setCategory(categoryClassifier.classify(details));
             tx.setSentTo(extractSentTo(details));
-
             tx.setCreatedAt(LocalDateTime.now());
             tx.setUpdatedAt(LocalDateTime.now());
 

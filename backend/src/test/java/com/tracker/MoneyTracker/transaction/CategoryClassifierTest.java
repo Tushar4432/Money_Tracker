@@ -17,7 +17,7 @@ class CategoryClassifierTest {
 
     @BeforeEach
     void setUp() {
-        sut = new CategoryClassifier();
+        sut = new CategoryClassifier(new CategoryMapper());
     }
 
     @Nested

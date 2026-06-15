@@ -44,7 +44,7 @@ class TransactionServiceTest {
 
             // Assert
             assertThat(result).isNotEmpty();
-            assertThat(result).hasSize(323);
+            assertThat(result).hasSize(317);
         }
 
         @Test
