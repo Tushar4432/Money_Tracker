@@ -6,7 +6,9 @@ import com.tracker.MoneyTracker.goal.SpendingGoal;
 import com.tracker.MoneyTracker.goal.SpendingGoalRepository;
 import com.tracker.MoneyTracker.notification.Notification;
 import com.tracker.MoneyTracker.notification.NotificationService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -18,6 +20,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class TransactionService {
 
@@ -129,12 +132,29 @@ public class TransactionService {
             tx.setSentTo(extractSentTo(details));
             tx.setCreatedAt(LocalDateTime.now());
             tx.setUpdatedAt(LocalDateTime.now());
+            // transactionHash is auto-computed in @PrePersist
 
             transactions.add(tx);
         }
 
-        if (transactionRepository != null) {
-            transactionRepository.saveAll(transactions);
+        if (transactionRepository != null && !transactions.isEmpty()) {
+            try {
+                transactionRepository.saveAll(transactions);
+            } catch (DataIntegrityViolationException e) {
+                // Unique constraint (uq_transaction_hash) violated — duplicate upload.
+                // Save one by one so new transactions still get persisted.
+                log.warn("Bulk save failed for user {}, falling back to individual saves", userId);
+                int saved = 0, skipped = 0;
+                for (Transaction tx : transactions) {
+                    try {
+                        transactionRepository.save(tx);
+                        saved++;
+                    } catch (DataIntegrityViolationException dup) {
+                        skipped++;
+                    }
+                }
+                log.info("Saved {} new transactions, skipped {} duplicates for user {}", saved, skipped, userId);
+            }
         }
 
         evaluateAndNotify(userId);

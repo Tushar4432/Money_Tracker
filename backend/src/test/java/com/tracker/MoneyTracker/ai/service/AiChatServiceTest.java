@@ -120,7 +120,7 @@ class AiChatServiceTest {
             String prompt = captor.getValue();
             assertThat(prompt).contains("60000");   // income
             assertThat(prompt).contains("Shopping"); // top category
-            assertThat(prompt).contains("financial coach");
+            assertThat(prompt).contains("Chartered Accountant");
         }
 
         @Test

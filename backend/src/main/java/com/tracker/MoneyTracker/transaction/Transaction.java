@@ -9,7 +9,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "user_transactions")
+@Table(name = "user_transactions", indexes = {
+    @Index(name = "idx_tx_user_hash", columnList = "userId, transactionHash")
+})
 @Getter
 @Setter
 public class Transaction {
@@ -24,6 +26,14 @@ public class Transaction {
     private String category;
     private String sentTo;
     private String originalDetail;
+
+    /**
+     * SHA-256 hash of (userId + date + amount + type + originalDetail).
+     * Used for O(1) duplicate detection when re-uploading bank statements.
+     */
+    @Column(name = "transaction_hash", length = 64)
+    private String transactionHash;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -31,6 +41,9 @@ public class Transaction {
     void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
+        if (transactionHash == null) {
+            transactionHash = TransactionHashUtil.compute(userId, transactionDate, amount, type, originalDetail);
+        }
     }
 
     @PreUpdate

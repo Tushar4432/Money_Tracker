@@ -56,13 +56,19 @@ CREATE TABLE user_transactions (
     category         VARCHAR(50)     NOT NULL DEFAULT 'OTHER',
     sent_to          VARCHAR(200),
     original_detail  TEXT,
+    transaction_hash VARCHAR(64),
     created_at       TIMESTAMP       NOT NULL DEFAULT NOW(),
     updated_at       TIMESTAMP       NOT NULL DEFAULT NOW(),
 
     CONSTRAINT fk_transaction_user
         FOREIGN KEY (user_id) REFERENCES app_users (uuid) ON DELETE CASCADE,
     CONSTRAINT fk_transaction_category
-        FOREIGN KEY (category) REFERENCES categories (name) ON DELETE SET DEFAULT
+        FOREIGN KEY (category) REFERENCES categories (name) ON DELETE SET DEFAULT,
+
+    -- Unique composite key: one transaction per user per hash.
+    -- Hash is computed from (date, amount, type, original_detail) so
+    -- re-uploading the same bank statement is silently ignored.
+    CONSTRAINT uq_transaction_hash UNIQUE (user_id, transaction_hash)
 );
 
 CREATE INDEX idx_tx_user_id       ON user_transactions (user_id);

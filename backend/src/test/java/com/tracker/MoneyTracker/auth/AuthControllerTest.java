@@ -36,12 +36,15 @@ class AuthControllerTest {
     @Mock
     private JwtUtil jwtUtil;
 
+    @Mock
+    private UserService userService;
+
     private MockMvc mockMvc;
     private ObjectMapper objectMapper;
 
     @BeforeEach
     void setUp() {
-        AuthController authController = new AuthController(registrationService, authenticationManager, jwtUtil);
+        AuthController authController = new AuthController(registrationService, authenticationManager, jwtUtil, userService);
         mockMvc = MockMvcBuilders.standaloneSetup(authController)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
@@ -135,16 +138,19 @@ class AuthControllerTest {
         void shouldLoginAndReturnToken_WhenValidCredentials() throws Exception {
             // Arrange
             AppUser user = createUser("john", "john@example.com", "password123");
+            user.setUuid("user-123");
             Authentication auth = new UsernamePasswordAuthenticationToken("john", null, java.util.List.of());
             given(authenticationManager.authenticate(any())).willReturn(auth);
             given(jwtUtil.generateToken("john")).willReturn("mock.jwt.token");
+            given(userService.findByUsernameOrThrow("john")).willReturn(user);
 
             // Act & Assert
             mockMvc.perform(post("/api/v1/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(user)))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.token").value("mock.jwt.token"));
+                    .andExpect(jsonPath("$.token").value("mock.jwt.token"))
+                    .andExpect(jsonPath("$.userId").value("user-123"));
         }
 
         @Test

@@ -49,10 +49,12 @@ CREATE TABLE user_transactions (
     category         VARCHAR(50)     NOT NULL DEFAULT 'OTHER',
     sent_to          VARCHAR(200),
     original_detail  VARCHAR(1000),
+    transaction_hash VARCHAR(64),
     created_at       TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at       TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_transaction_user FOREIGN KEY (user_id) REFERENCES app_users(uuid) ON DELETE CASCADE,
-    CONSTRAINT fk_transaction_category FOREIGN KEY (category) REFERENCES categories(name) ON DELETE SET DEFAULT
+    CONSTRAINT fk_transaction_category FOREIGN KEY (category) REFERENCES categories(name) ON DELETE SET DEFAULT,
+    CONSTRAINT uq_transaction_hash UNIQUE (user_id, transaction_hash)
 );
 
 CREATE TABLE spending_goals (
