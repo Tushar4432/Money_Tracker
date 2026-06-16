@@ -24,4 +24,11 @@ public class Notification {
     private boolean read;
     private String referenceId;
     private LocalDateTime createdAt;
+
+    @PrePersist
+    void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+    }
 }

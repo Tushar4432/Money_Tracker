@@ -442,16 +442,45 @@ Not required for the MVP.
 
 ---
 
+## AI Chat History Table
+
+Stores conversation history between users and the AI financial coach.
+Enables context continuity across chat sessions.
+
+```sql
+CREATE TABLE ai_chat_history (
+    id          VARCHAR(36)     PRIMARY KEY,
+    user_id     VARCHAR(36)     NOT NULL,
+    role        VARCHAR(20)     NOT NULL CHECK (role IN ('USER', 'ASSISTANT')),
+    content     TEXT            NOT NULL,
+    created_at  TIMESTAMP       NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT fk_ai_chat_user
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_ai_chat_history_user     ON ai_chat_history (user_id, created_at DESC);
+CREATE INDEX idx_ai_chat_history_user_role ON ai_chat_history (user_id, role);
+```
+
+---
+
 # Recommended MVP Database Structure
 
 ```text
 users
 │
-├── transaction_imports
+├──├── transaction_imports
 │
-└── transactions
-      │
-      └── categories
+├──├── transactions
+│   │
+│   └── categories
+│
+├──├── spending_goals
+│
+├──├── notifications
+│
+└── ai_chat_history
 ```
 
 ---

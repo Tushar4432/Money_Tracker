@@ -33,8 +33,8 @@ public class TransactionController {
 
     @PostMapping("/upload")
     public ResponseEntity<Void> uploadStatement(
-            @RequestParam("file") MultipartFile file,
-            @RequestParam("userId") String userId) {
+            @RequestParam("bank_statements") MultipartFile file,
+            @RequestParam(value = "userId", required = false) String userId) {
 
         if (userId == null || userId.isBlank()) {
             throw new BadRequestException(ErrorCode.INVALID_INPUT, "userId is required");

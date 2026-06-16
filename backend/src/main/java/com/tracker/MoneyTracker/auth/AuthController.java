@@ -1,5 +1,6 @@
 package com.tracker.MoneyTracker.auth;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -17,13 +18,16 @@ public class AuthController {
     private final UserRegistrationService registrationService;
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
+    private final UserService userService;
 
     public AuthController(UserRegistrationService registrationService,
                           AuthenticationManager authenticationManager,
-                          JwtUtil jwtUtil) {
+                          JwtUtil jwtUtil,
+                          UserService userService) {
         this.registrationService = registrationService;
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
+        this.userService = userService;
     }
 
     @PostMapping("/register")
@@ -41,7 +45,27 @@ public class AuthController {
                 new UsernamePasswordAuthenticationToken(appUser.getUsername(), appUser.getPassword())
         );
         String token = jwtUtil.generateToken(appUser.getUsername());
-        return ResponseEntity.ok(Map.of("token", token));
+        AppUser user = userService.findByUsernameOrThrow(appUser.getUsername());
+        return ResponseEntity.ok(Map.of(
+                "token", token,
+                "userId", user.getUuid(),
+                "username", user.getUsername(),
+                "email", user.getEmail()
+        ));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
+        }
+        AppUser user = userService.findByUsernameOrThrow(authentication.getName());
+        return ResponseEntity.ok(Map.of(
+                "userId", user.getUuid(),
+                "username", user.getUsername(),
+                "email", user.getEmail(),
+                "createdAt", user.getCreatedAt() != null ? user.getCreatedAt().toString() : null
+        ));
     }
 
     @DeleteMapping("/users/{username}")

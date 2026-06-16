@@ -55,7 +55,7 @@ public class NotificationController {
         return ResponseEntity.ok(notificationService.getUnreadNotifications(userId));
     }
 
-    @PatchMapping("/{notificationId}/read")
+    @PutMapping("/{notificationId}/read")
     public ResponseEntity<Notification> markAsRead(@PathVariable String notificationId) {
         if (notificationService == null) {
             return ResponseEntity.ok(null);
@@ -64,7 +64,7 @@ public class NotificationController {
         return ResponseEntity.ok(updated);
     }
 
-    @PatchMapping("/read-all")
+    @PutMapping("/read-all")
     public ResponseEntity<Void> markAllAsRead(@RequestParam("userId") String userId) {
         if (notificationService == null) {
             return ResponseEntity.noContent().build();

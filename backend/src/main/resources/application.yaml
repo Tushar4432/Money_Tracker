@@ -5,6 +5,9 @@ spring:
     port: 8080
   profiles:
     active: dev
+  output:
+    ansi:
+      enabled: always
 
 server:
   servlet:
@@ -13,5 +16,11 @@ server:
 jwt:
   secret: dGhpcyBpcyBhIHZlcnkgc2VjdXJlIHNlY3JldCBrZXkgZm9yIEpXVCB0b2tlbiBnZW5lcmF0aW9uIGFuZCB2YWxpZGF0aW9u
   expiration: 86400000
+
+ollama:
+  base-url: http://localhost:11434
+  model: llama3.2
+  temperature: 0.7
+  max-tokens: 2048
 
 

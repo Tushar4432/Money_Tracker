@@ -136,3 +136,23 @@ CREATE INDEX idx_notifications_user_id   ON notifications (user_id);
 CREATE INDEX idx_notifications_user_read ON notifications (user_id, read);
 CREATE INDEX idx_notifications_type      ON notifications (type);
 CREATE INDEX idx_notifications_created   ON notifications (created_at DESC);
+
+-- ============================================================
+-- AI Chat History
+-- Stores conversation between users and the AI financial coach.
+-- Enables context continuity across chat sessions.
+-- ============================================================
+
+CREATE TABLE ai_chat_history (
+    id          VARCHAR(36)     PRIMARY KEY,
+    user_id     VARCHAR(36)     NOT NULL,
+    role        VARCHAR(20)     NOT NULL CHECK (role IN ('USER', 'ASSISTANT')),
+    content     TEXT            NOT NULL,
+    created_at  TIMESTAMP       NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT fk_ai_chat_user
+        FOREIGN KEY (user_id) REFERENCES app_users (uuid) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_ai_chat_history_user     ON ai_chat_history (user_id, created_at DESC);
+CREATE INDEX idx_ai_chat_history_user_role ON ai_chat_history (user_id, role);

@@ -20,3 +20,26 @@ Application Auth should :
 3. logout
 4. app works only after login
 5. each login session will have a token that will expire after a time perion and this token will be used by jwt to authenticate the user if they are logged in
+
+AI LLM setup
+
+here is how the AI setup needs to be done:
+1. we will run a LLM in local using docker
+2. i suggest the latest version of olama
+3. need a docker compose to run the olama image
+
+AI LLM use
+
+the AI LLM is the most crucial part of this project, which wil be used in the following manner:
+1. the ai will have the access to the analytics
+2. it will use this data analyse the users spending patterns
+3. the user can chat with this LLM
+4. in the AI chat user can tell their goal, these goals need to be identified and then stored automatically.
+5. or based on the user requirement like saving money, emergency fund, etc, the AI can create goals for the user.
+6. the chat context with LLM needs to be stored for future use.
+
+Integration test
+1. for the database if the data is being added to the database or not
+2. for the ai if it works or not
+3. for the flow of the application if it works as expected
+4. integration test for the suth if they are working correctly

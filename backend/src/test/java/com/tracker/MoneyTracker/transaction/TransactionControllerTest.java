@@ -41,7 +41,7 @@ class TransactionControllerTest {
         @DisplayName("Should accept Excel file upload and return created status")
         void shouldAcceptExcelUpload_AndReturnCreated() throws Exception {
             MockMultipartFile file = new MockMultipartFile(
-                    "file", "statement.xlsx",
+                    "bank_statements", "statement.xlsx",
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     "test content".getBytes()
             );
@@ -55,7 +55,7 @@ class TransactionControllerTest {
         @DisplayName("Should accept CSV file upload and return created status")
         void shouldAcceptCsvUpload_AndReturnCreated() throws Exception {
             MockMultipartFile file = new MockMultipartFile(
-                    "file", "statement.csv",
+                    "bank_statements", "statement.csv",
                     "text/csv",
                     "Date,Details,Debit,Credit\n".getBytes()
             );
@@ -69,7 +69,7 @@ class TransactionControllerTest {
         @DisplayName("Should throw BadRequestException when file is empty")
         void shouldThrowBadRequest_WhenFileIsEmpty() {
             MockMultipartFile file = new MockMultipartFile(
-                    "file", "empty.xlsx",
+                    "bank_statements", "empty.xlsx",
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     new byte[0]
             );
@@ -82,7 +82,7 @@ class TransactionControllerTest {
         @DisplayName("Should throw BadRequestException when file type is unsupported")
         void shouldThrowBadRequest_WhenUnsupportedFileType() {
             MockMultipartFile file = new MockMultipartFile(
-                    "file", "statement.pdf",
+                    "bank_statements", "statement.pdf",
                     "application/pdf",
                     "test".getBytes()
             );
@@ -95,7 +95,7 @@ class TransactionControllerTest {
         @DisplayName("Should throw BadRequestException when userId is blank")
         void shouldThrowBadRequest_WhenUserIdIsBlank() {
             MockMultipartFile file = new MockMultipartFile(
-                    "file", "statement.xlsx",
+                    "bank_statements", "statement.xlsx",
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     "test".getBytes()
             );

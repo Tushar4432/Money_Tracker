@@ -25,7 +25,7 @@ public class AnalyticsController {
     }
 
     @GetMapping("/summary")
-    public ResponseEntity<SpendingSummary> getSpendingSummary(@RequestParam("userId") String userId) {
+    public ResponseEntity<SpendingSummary> getSpendingSummary(@RequestParam(value = "userId", required = false) String userId) {
         if (userId == null || userId.isBlank()) {
             return ResponseEntity.badRequest().build();
         }
@@ -37,7 +37,7 @@ public class AnalyticsController {
 
     @GetMapping("/categories")
     public ResponseEntity<List<CategoryBreakdown>> getCategoryBreakdown(
-            @RequestParam("userId") String userId,
+            @RequestParam(value = "userId", required = false) String userId,
             @RequestParam(value = "start", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
             @RequestParam(value = "end", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
         if (userId == null || userId.isBlank()) {
@@ -51,7 +51,7 @@ public class AnalyticsController {
 
     @GetMapping("/trends")
     public ResponseEntity<List<MonthlyTrend>> getMonthlyTrends(
-            @RequestParam("userId") String userId,
+            @RequestParam(value = "userId", required = false) String userId,
             @RequestParam(value = "periods", defaultValue = "6") int periods,
             @RequestParam(value = "period", defaultValue = "MONTHLY") String period) {
         if (userId == null || userId.isBlank()) {
@@ -65,7 +65,7 @@ public class AnalyticsController {
 
     @GetMapping("/comparison")
     public ResponseEntity<SpendingComparison> getSpendingComparison(
-            @RequestParam("userId") String userId,
+            @RequestParam(value = "userId", required = false) String userId,
             @RequestParam(value = "period", defaultValue = "MONTHLY") String period) {
         if (userId == null || userId.isBlank()) {
             return ResponseEntity.badRequest().build();
@@ -77,7 +77,7 @@ public class AnalyticsController {
     }
 
     @GetMapping("/budget")
-    public ResponseEntity<List<BudgetStatus>> getBudgetStatus(@RequestParam("userId") String userId) {
+    public ResponseEntity<List<BudgetStatus>> getBudgetStatus(@RequestParam(value = "userId", required = false) String userId) {
         if (userId == null || userId.isBlank()) {
             return ResponseEntity.badRequest().build();
         }
