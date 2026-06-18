@@ -2,6 +2,7 @@
 *.class
 
 .idea
+.vscode
 
 # Log file
 *.log
