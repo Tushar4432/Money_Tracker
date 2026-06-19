@@ -1,6 +1,8 @@
 package com.tracker.MoneyTracker.ai.controller;
 
 import com.tracker.MoneyTracker.ai.dto.*;
+import com.tracker.MoneyTracker.ai.entity.AiChatMessage;
+import com.tracker.MoneyTracker.ai.repository.AiChatMessageRepository;
 import com.tracker.MoneyTracker.ai.service.AffordabilityService;
 import com.tracker.MoneyTracker.ai.service.AiChatService;
 import com.tracker.MoneyTracker.ai.service.HealthScoreService;
@@ -36,11 +38,14 @@ class AiCoachControllerTest {
     @Mock
     private AffordabilityService affordabilityService;
 
+    @Mock
+    private AiChatMessageRepository chatMessageRepository;
+
     private AiCoachController sut;
 
     @BeforeEach
     void setUp() {
-        sut = new AiCoachController(chatService, recommendationService, healthScoreService, affordabilityService);
+        sut = new AiCoachController(chatService, recommendationService, healthScoreService, affordabilityService, chatMessageRepository);
     }
 
     @Nested
@@ -176,6 +181,68 @@ class AiCoachControllerTest {
             AffordabilityRequest request = new AffordabilityRequest("user-123", "", BigDecimal.valueOf(1000));
 
             assertThatThrownBy(() -> sut.analyzeAffordability(request))
+                    .isInstanceOf(BadRequestException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("GET /history")
+    class HistoryEndpointTests {
+
+        @Test
+        @DisplayName("Should return 200 with chat history list")
+        void shouldReturn200_WithChatHistory() {
+            // Arrange
+            AiChatMessage msg1 = new AiChatMessage();
+            msg1.setId("msg-1");
+            msg1.setUserId("user-123");
+            msg1.setRole("USER");
+            msg1.setContent("Hello");
+            msg1.setCreatedAt(LocalDateTime.now().minusMinutes(5));
+
+            AiChatMessage msg2 = new AiChatMessage();
+            msg2.setId("msg-2");
+            msg2.setUserId("user-123");
+            msg2.setRole("ASSISTANT");
+            msg2.setContent("Hi there!");
+            msg2.setCreatedAt(LocalDateTime.now().minusMinutes(4));
+
+            when(chatMessageRepository.findByUserIdOrderByCreatedAtAsc("user-123"))
+                    .thenReturn(List.of(msg1, msg2));
+
+            // Act
+            ResponseEntity<List<AiChatMessage>> response = sut.getChatHistory("user-123");
+
+            // Assert
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getBody()).hasSize(2);
+            assertThat(response.getBody().get(0).getRole()).isEqualTo("USER");
+            assertThat(response.getBody().get(1).getRole()).isEqualTo("ASSISTANT");
+        }
+
+        @Test
+        @DisplayName("Should return empty list when no history exists")
+        void shouldReturnEmptyList_WhenNoHistory() {
+            when(chatMessageRepository.findByUserIdOrderByCreatedAtAsc("user-123"))
+                    .thenReturn(List.of());
+
+            ResponseEntity<List<AiChatMessage>> response = sut.getChatHistory("user-123");
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getBody()).isEmpty();
+        }
+
+        @Test
+        @DisplayName("Should return 400 when userId is blank")
+        void shouldReturn400_WhenUserIdIsBlank() {
+            assertThatThrownBy(() -> sut.getChatHistory(""))
+                    .isInstanceOf(BadRequestException.class);
+        }
+
+        @Test
+        @DisplayName("Should return 400 when userId is null")
+        void shouldReturn400_WhenUserIdIsNull() {
+            assertThatThrownBy(() -> sut.getChatHistory(null))
                     .isInstanceOf(BadRequestException.class);
         }
     }

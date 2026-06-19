@@ -1,6 +1,8 @@
 package com.tracker.MoneyTracker.ai.controller;
 
 import com.tracker.MoneyTracker.ai.dto.*;
+import com.tracker.MoneyTracker.ai.entity.AiChatMessage;
+import com.tracker.MoneyTracker.ai.repository.AiChatMessageRepository;
 import com.tracker.MoneyTracker.ai.service.AffordabilityService;
 import com.tracker.MoneyTracker.ai.service.AiChatService;
 import com.tracker.MoneyTracker.ai.service.HealthScoreService;
@@ -9,6 +11,8 @@ import com.tracker.MoneyTracker.error.ErrorCode;
 import com.tracker.MoneyTracker.exception.BadRequestException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * REST controller for the AI Spend Coach feature.
@@ -29,15 +33,18 @@ public class AiCoachController {
     private final RecommendationService recommendationService;
     private final HealthScoreService healthScoreService;
     private final AffordabilityService affordabilityService;
+    private final AiChatMessageRepository chatMessageRepository;
 
     public AiCoachController(AiChatService chatService,
                              RecommendationService recommendationService,
                              HealthScoreService healthScoreService,
-                             AffordabilityService affordabilityService) {
+                             AffordabilityService affordabilityService,
+                             AiChatMessageRepository chatMessageRepository) {
         this.chatService = chatService;
         this.recommendationService = recommendationService;
         this.healthScoreService = healthScoreService;
         this.affordabilityService = affordabilityService;
+        this.chatMessageRepository = chatMessageRepository;
     }
 
     /**
@@ -97,5 +104,17 @@ public class AiCoachController {
         AffordabilityResponse response = affordabilityService.analyze(
                 request.userId(), request.itemName(), request.cost());
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Get chat history for a user, oldest first.
+     */
+    @GetMapping("/history")
+    public ResponseEntity<List<AiChatMessage>> getChatHistory(@RequestParam("userId") String userId) {
+        if (userId == null || userId.isBlank()) {
+            throw new BadRequestException(ErrorCode.INVALID_INPUT, "userId is required");
+        }
+        List<AiChatMessage> messages = chatMessageRepository.findByUserIdOrderByCreatedAtAsc(userId);
+        return ResponseEntity.ok(messages);
     }
 }

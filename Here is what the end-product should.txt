@@ -43,3 +43,36 @@ Integration test
 2. for the ai if it works or not
 3. for the flow of the application if it works as expected
 4. integration test for the suth if they are working correctly
+
+
+Frontend 
+
+Here is the plan for frontend 
+
+Pages : 
+	1. Home page ( this includes the upload button and the ai chat interaction )
+	2. Analytics page ( this includes all the analytics mentioned above )
+	3. Goals page ( this includes all the goals mentioned above )
+	4. Auth pages ( login, logout, register )
+
+AI Chat 
+1. on the home page there should be a chat interface with ai
+2. it should be conversational
+3. when user uploads a bank statement it should be processed into analytics and the ai should be able to answer questions about it
+4. the ai should be able to answer questions like : 
+	1. how much did i spend in last month
+	2. how much did i spend on groceries in last month
+	3. how much did i spend on rent in last month
+	4. how much did i spend on utilities in last month
+	5. how much did i spend on transportation in last month
+	6. how much did i spend on entertainment in last month
+	7. how much did i spend on dining out in last month
+	8. how much did i spend on shopping in last month
+	9. how much did i spend on other categories in last month 
+	10. how much did i save in last month
+	11. how much did i spend on each category in last month
+	12. how much did i spend on each category in last month compared to previous month
+	13. how much did i spend on each category in last month compared to previous month and previous quarter and previous half-year and previous year
+
+
+

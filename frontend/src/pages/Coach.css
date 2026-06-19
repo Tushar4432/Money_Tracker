@@ -1,0 +1,326 @@
+/* ─── AI Coach Page ─── */
+.coach-page {
+  padding-top: var(--space-xl);
+}
+
+.coach-header-badge {
+  padding-top: var(--space-xs);
+}
+
+/* ─── Layout ─── */
+.coach-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-lg);
+}
+
+@media (min-width: 1024px) {
+  .coach-layout {
+    grid-template-columns: 320px 1fr;
+    gap: var(--space-xl);
+  }
+}
+
+/* ─── Sidebar ─── */
+.coach-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+/* ─── Health Score ─── */
+.health-score-card {
+  padding: var(--space-lg);
+  border-radius: var(--radius-lg);
+  background: rgba(12, 18, 32, 0.6);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(148, 163, 184, 0.08);
+  text-align: center;
+}
+
+.health-score-ring {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  margin: var(--space-md) auto;
+}
+
+.health-score-value {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-heading);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.health-score-value span {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-right: 2px;
+}
+
+.health-breakdown {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: var(--space-sm) 0 0;
+}
+
+/* ─── Recommendations ─── */
+.recommendations-card {
+  padding: var(--space-lg);
+  border-radius: var(--radius-lg);
+  background: rgba(12, 18, 32, 0.6);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(148, 163, 184, 0.08);
+}
+
+.recommendations-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.recommendation-item {
+  display: flex;
+  gap: var(--space-sm);
+  padding: var(--space-sm);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(148, 163, 184, 0.05);
+  transition: all var(--transition-fast);
+}
+
+.recommendation-item:hover {
+  background: rgba(0, 240, 255, 0.03);
+  border-color: rgba(0, 240, 255, 0.1);
+}
+
+.rec-icon {
+  color: var(--accent-cyan);
+  font-size: 0.875rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.recommendation-item p {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ─── Chat Area ─── */
+.coach-chat-area {
+  border-radius: var(--radius-lg);
+  background: rgba(12, 18, 32, 0.6);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(148, 163, 184, 0.08);
+  display: flex;
+  flex-direction: column;
+  height: 600px;
+  overflow: hidden;
+}
+
+.coach-chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+/* ─── Messages ─── */
+.coach-message {
+  display: flex;
+  gap: var(--space-sm);
+  max-width: 80%;
+}
+
+.coach-message.user {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+
+.coach-msg-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.coach-message.ai .coach-msg-avatar {
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.15), rgba(139, 92, 246, 0.15));
+  color: var(--accent-cyan);
+}
+
+.coach-message.user .coach-msg-avatar {
+  background: rgba(139, 92, 246, 0.2);
+  color: var(--accent-violet);
+}
+
+.coach-msg-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.coach-msg-bubble {
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.coach-message.ai .coach-msg-bubble {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(148, 163, 184, 0.08);
+  border-top-left-radius: 4px;
+}
+
+.coach-message.user .coach-msg-bubble {
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.15), rgba(0, 160, 224, 0.15));
+  border: 1px solid rgba(0, 240, 255, 0.15);
+  border-top-right-radius: 4px;
+}
+
+.coach-msg-bubble p {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+}
+
+.coach-msg-bubble p + p {
+  margin-top: 6px;
+}
+
+.coach-msg-time {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  padding: 0 4px;
+}
+
+/* Typing */
+.coach-msg-bubble.typing {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding: var(--space-sm) var(--space-md);
+}
+
+.typing-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  animation: typing-bounce 1.4s ease-in-out infinite;
+}
+
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typing-bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-6px); opacity: 1; }
+}
+
+/* ─── Suggestions ─── */
+.coach-suggestions {
+  padding: var(--space-sm) var(--space-md);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.suggestions-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 0 0 var(--space-sm);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.suggestions-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.suggestion-chip {
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  background: rgba(0, 240, 255, 0.05);
+  border: 1px solid rgba(0, 240, 255, 0.15);
+  color: var(--accent-cyan);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.suggestion-chip:hover {
+  background: rgba(0, 240, 255, 0.12);
+  border-color: rgba(0, 240, 255, 0.3);
+}
+
+/* ─── Input ─── */
+.coach-input-form {
+  display: flex;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.coach-input {
+  flex: 1;
+  padding: 0.75rem 1.25rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-full);
+  background: rgba(6, 10, 20, 0.6);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-family: var(--font-body);
+  transition: all var(--transition-fast);
+}
+
+.coach-input:focus {
+  border-color: rgba(0, 240, 255, 0.4);
+  box-shadow: 0 0 0 3px rgba(0, 240, 255, 0.08);
+}
+
+.coach-input::placeholder {
+  color: var(--text-muted);
+}
+
+.coach-send-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #00c8d4, #00a0e0);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
+  box-shadow: 0 2px 8px rgba(0, 200, 212, 0.3);
+}
+
+.coach-send-btn:hover:not(:disabled) {
+  box-shadow: 0 4px 16px rgba(0, 200, 212, 0.4);
+  transform: scale(1.05);
+}
+
+.coach-send-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}

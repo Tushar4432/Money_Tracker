@@ -450,6 +450,61 @@ class AiIntegrationTest {
     }
 
     @Nested
+    @DisplayName("GET /api/v1/ai/history")
+    class ChatHistoryEndpointTests {
+
+        @Test
+        @DisplayName("Should return chat history after chatting")
+        void shouldReturnChatHistory() {
+            // First send a chat message
+            ChatRequest chatReq = new ChatRequest(userId, "How can I save money?");
+            restTemplate.exchange(
+                    baseUrl + "/api/v1/ai/chat",
+                    HttpMethod.POST,
+                    new HttpEntity<>(chatReq, jsonHeaders()),
+                    Map.class);
+
+            // Now fetch history
+            ResponseEntity<List> response = restTemplate.exchange(
+                    baseUrl + "/api/v1/ai/history?userId=" + userId,
+                    HttpMethod.GET,
+                    new HttpEntity<>(authHeaders()),
+                    List.class);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getBody()).isNotEmpty();
+            assertThat(response.getBody().size()).isGreaterThanOrEqualTo(2); // user msg + AI reply
+        }
+
+        @Test
+        @DisplayName("Should return empty list when no chat history")
+        void shouldReturnEmptyList_WhenNoHistory() {
+            String newUserId = UUID.randomUUID().toString();
+            registerAndLogin("historyuser", "history@example.com", "historypass");
+
+            ResponseEntity<List> response = restTemplate.exchange(
+                    baseUrl + "/api/v1/ai/history?userId=" + newUserId,
+                    HttpMethod.GET,
+                    new HttpEntity<>(authHeaders()),
+                    List.class);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(response.getBody()).isEmpty();
+        }
+
+        @Test
+        @DisplayName("Should return 400 when userId is blank")
+        void shouldReturn400_WhenUserIdBlank() {
+            HttpHeaders headers = authHeaders();
+            ResponseEntity<String> response = restTemplate.exchange(
+                    baseUrl + "/api/v1/ai/history?userId=",
+                    HttpMethod.GET, new HttpEntity<>(headers), String.class);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @Nested
     @DisplayName("AI endpoints require authentication")
     class AiAuthTests {
 

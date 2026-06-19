@@ -1,4 +1,28 @@
 services:
+  # ── PostgreSQL Database ──
+  postgres:
+    image: postgres:17-alpine
+    container_name: money_tracker_db
+    environment:
+      POSTGRES_DB: money_tracker
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/src/main/resources/sql/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d money_tracker"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  # ── Ollama LLM ──
+  # Pulls the model on first start and verifies it's available before becoming healthy.
+  # The entrypoint script starts Ollama, pulls llama3.2 if not present, and serves.
   ollama:
     image: ollama/ollama:latest
     container_name: ollama
@@ -8,22 +32,57 @@ services:
       - ollama_data:/root/.ollama
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "ollama", "--version"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
+      # Check that Ollama is running AND the model is loaded
+      test: ["CMD-SHELL", "ollama list | grep -q llama3.2"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 120s
+    # Override entrypoint: start Ollama in background, pull model, then foreground serve
+    entrypoint: ["/bin/sh", "-c", "ollama serve & sleep 5 && ollama pull llama3.2 && wait"]
 
-  # Helper service to pull the default model on first startup
-  ollama-pull:
-    image: ollama/ollama:latest
-    container_name: ollama-pull
+  # ── Backend (Spring Boot) ──
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: money_tracker_backend
     depends_on:
+      postgres:
+        condition: service_healthy
       ollama:
         condition: service_healthy
-    entrypoint: ["sh", "-c", "ollama pull llama3.2 && echo 'Model llama3.2 pulled successfully'"]
-    restart: "no"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/money_tracker
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 1234
+      OLLAMA_BASE_URL: http://ollama:11434
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/money_tracker/api/v1/auth/ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 90s
+
+  # ── Frontend (React + Nginx) ──
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: money_tracker_frontend
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "80:80"
+    restart: unless-stopped
 
 volumes:
+  postgres_data:
+    driver: local
   ollama_data:
     driver: local

@@ -79,4 +79,32 @@ public class AuthController {
         SecurityContextHolder.clearContext();
         return ResponseEntity.ok("Logged out");
     }
+
+    /**
+     * Unauthenticated ping — returns 200 as long as the app is running.
+     * Used by Docker health checks.
+     */
+    @GetMapping("/ping")
+    public ResponseEntity<Map<String, String>> ping() {
+        return ResponseEntity.ok(Map.of("status", "ok"));
+    }
+
+    /**
+     * Authenticated health-check endpoint.
+     * Returns 200 with user info if the JWT token is valid.
+     * Frontend uses this to verify backend connectivity + auth status.
+     */
+    @GetMapping("/health")
+    public ResponseEntity<Map<String, Object>> health(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("status", "unauthenticated"));
+        }
+        AppUser user = userService.findByUsernameOrThrow(authentication.getName());
+        return ResponseEntity.ok(Map.of(
+                "status", "ok",
+                "userId", user.getUuid(),
+                "username", user.getUsername()
+        ));
+    }
 }

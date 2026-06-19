@@ -1,0 +1,395 @@
+/* ─── Analytics Page ─── */
+.analytics-page {
+  padding-top: var(--space-xl);
+}
+
+/* ─── Error ─── */
+.analytics-error {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  margin-bottom: var(--space-lg);
+  border-radius: var(--radius-md);
+  background: rgba(244, 63, 94, 0.1);
+  border: 1px solid rgba(244, 63, 94, 0.2);
+  color: var(--accent-rose);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+/* ─── Period Filter ─── */
+.period-filter {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--radius-full);
+  background: rgba(12, 18, 32, 0.6);
+  border: 1px solid var(--border-default);
+  width: fit-content;
+}
+
+.period-btn {
+  padding: 6px 16px;
+  border-radius: var(--radius-full);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.period-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.period-btn.active {
+  color: #fff;
+  background: linear-gradient(135deg, #00c8d4, #00a0e0);
+  box-shadow: 0 2px 8px rgba(0, 200, 212, 0.3);
+}
+
+/* ─── Quick Stats ─── */
+.analytics-quick-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-md);
+  margin-bottom: var(--space-xl);
+}
+
+.quick-stat {
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius-md);
+  background: rgba(12, 18, 32, 0.6);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(148, 163, 184, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.quick-stat-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.quick-stat-value {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* ─── Analytics Grid ─── */
+.analytics-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-lg);
+}
+
+@media (min-width: 768px) {
+  .analytics-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.analytics-card {
+  padding: var(--space-lg);
+  border-radius: var(--radius-lg);
+  background: rgba(12, 18, 32, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(148, 163, 184, 0.08);
+  min-height: 300px;
+}
+
+.card-title {
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 var(--space-lg);
+  letter-spacing: -0.01em;
+}
+
+/* ─── Donut Chart ─── */
+.donut-chart-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-lg);
+}
+
+.donut-chart {
+  filter: drop-shadow(0 0 12px rgba(0, 240, 255, 0.1));
+}
+
+.donut-total {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 700;
+  fill: var(--text-primary);
+}
+
+.donut-label {
+  font-size: 0.7rem;
+  fill: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.donut-legend {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 4px 0;
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legend-name {
+  flex: 1;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.legend-value {
+  font-family: var(--font-heading);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.legend-pct {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  min-width: 36px;
+  text-align: right;
+}
+
+/* ─── Bar Chart ─── */
+.bar-chart-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.bar-chart {
+  min-width: 300px;
+}
+
+.bar-rect {
+  transition: all 0.3s ease;
+}
+
+.bar-rect:hover {
+  filter: brightness(1.2);
+}
+
+.bar-value {
+  font-size: 0.65rem;
+  fill: var(--text-secondary);
+  font-weight: 600;
+}
+
+.bar-label {
+  font-size: 0.65rem;
+  fill: var(--text-muted);
+}
+
+/* ─── Comparison Table ─── */
+.comparison-summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.comparison-summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+}
+
+.comparison-summary-row span:first-child {
+  color: var(--text-muted);
+}
+
+.comparison-value {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+}
+
+.comparison-value.positive {
+  color: var(--accent-emerald);
+}
+
+.comparison-value.negative {
+  color: var(--accent-rose);
+}
+
+.comparison-subtitle {
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin: 0 0 var(--space-sm);
+  letter-spacing: -0.01em;
+}
+
+.comparison-table-wrapper {
+  overflow-x: auto;
+}
+
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.comparison-table th {
+  text-align: left;
+  padding: var(--space-xs) var(--space-sm);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.comparison-table td {
+  padding: var(--space-sm);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.comparison-table tr:last-child td {
+  border-bottom: none;
+}
+
+.category-cell {
+  font-weight: 500;
+  color: var(--text-primary) !important;
+}
+
+.muted {
+  color: var(--text-muted) !important;
+}
+
+.change-cell {
+  font-weight: 600;
+  font-family: var(--font-heading);
+}
+
+.change-cell.positive {
+  color: var(--accent-emerald) !important;
+}
+
+.change-cell.negative {
+  color: var(--accent-rose) !important;
+}
+
+/* ─── Budget Status ─── */
+.budget-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.budget-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.budget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.budget-category {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.budget-amount {
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.budget-amount.over {
+  color: var(--accent-rose);
+}
+
+.budget-bar {
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+}
+
+.budget-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  background: linear-gradient(90deg, var(--accent-cyan), var(--accent-emerald));
+}
+
+.budget-fill.over {
+  background: linear-gradient(90deg, var(--accent-amber), var(--accent-rose));
+}
+
+.budget-pct {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.budget-pct.over {
+  color: var(--accent-rose);
+}
+
+/* ─── Chart Empty State ─── */
+.chart-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2xl);
+  text-align: center;
+}
+
+.chart-empty span {
+  font-size: 2rem;
+  color: var(--text-muted);
+  margin-bottom: var(--space-sm);
+}
+
+.chart-empty p {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
