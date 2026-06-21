@@ -1,0 +1,22 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://postgres:5432/money_tracker
+    username: postgres
+    password: 1234
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+
+# Ollama runs natively on Windows (GPU-accelerated), not in Docker.
+# host.docker.internal resolves to the host machine from inside a container.
+ollama:
+  base-url: http://host.docker.internal:11434
+  model: llama3.2
+  temperature: 0.7
+  max-tokens: 512
+
+# CORS: allow the frontend origin
+cors:
+  allowed-origins: http://localhost,http://localhost:80,http://localhost:5173

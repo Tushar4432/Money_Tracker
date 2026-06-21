@@ -1,0 +1,352 @@
+/* ─── Home / Dashboard: Brutalist Grid ─── */
+
+.home-page {
+  padding-top: var(--sp-6);
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--sp-8);
+  padding-bottom: var(--sp-4);
+  border-bottom: 1px solid var(--border);
+}
+
+.page-title {
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.03em;
+  color: var(--fg);
+}
+
+.page-title .accent {
+  color: var(--accent);
+}
+
+.page-subtitle {
+  font-size: 0.75rem;
+  color: var(--fg-muted);
+  margin: var(--sp-1) 0 0;
+}
+
+.page-header-right {
+  padding-top: var(--sp-1);
+}
+
+/* ─── Summary Grid ─── */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  margin-bottom: var(--sp-8);
+}
+
+.summary-card {
+  padding: var(--sp-4) var(--sp-5);
+  background: var(--bg-surface);
+  border: none;
+  transition: background var(--t-fast);
+}
+
+.summary-card:hover {
+  background: var(--bg-elevated);
+}
+
+.summary-card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-2);
+}
+
+.summary-icon {
+  font-size: 0.75rem;
+  color: var(--accent);
+  width: 16px;
+  text-align: center;
+}
+
+.summary-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.summary-value {
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--fg);
+  letter-spacing: -0.03em;
+}
+
+.summary-change {
+  font-size: 0.65rem;
+  font-weight: 600;
+  margin-top: var(--sp-1);
+}
+
+.summary-change.positive {
+  color: var(--success);
+}
+
+.summary-change.negative {
+  color: var(--danger);
+}
+
+/* ─── Main Grid ─── */
+.home-main-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--sp-6);
+}
+
+@media (min-width: 1024px) {
+  .home-main-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-6);
+  }
+}
+
+.home-left,
+.home-right {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+}
+
+/* ─── Upload Zone ─── */
+.upload-zone {
+  border: 1px dashed var(--border-bright);
+  padding: var(--sp-8) var(--sp-6);
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--t-fast);
+  background: var(--bg-surface);
+  position: relative;
+}
+
+.upload-zone:hover,
+.upload-zone.drag-over {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.upload-zone.uploading {
+  border-color: var(--success);
+  cursor: default;
+}
+
+.upload-content {
+  position: relative;
+  z-index: 1;
+}
+
+.upload-icon {
+  font-size: 1.5rem;
+  color: var(--accent);
+  margin-bottom: var(--sp-3);
+  line-height: 1;
+}
+
+.upload-text {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--fg);
+  margin: 0 0 var(--sp-1);
+}
+
+.upload-subtext {
+  font-size: 0.7rem;
+  color: var(--fg-muted);
+  margin: 0 0 var(--sp-4);
+}
+
+.upload-formats {
+  display: flex;
+  gap: var(--sp-2);
+  justify-content: center;
+}
+
+.upload-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--border);
+  border-top-color: var(--success);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  margin: 0 auto var(--sp-3);
+}
+
+.upload-success {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4);
+  background: rgba(74, 222, 128, 0.06);
+  border: 1px solid var(--success);
+  color: var(--success);
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+}
+
+/* ─── Section Title ─── */
+.section-title {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--fg);
+  margin: 0 0 var(--sp-4);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding-bottom: var(--sp-2);
+  border-bottom: 1px solid var(--border);
+}
+
+/* ─── Recent Transactions ─── */
+.recent-transactions {
+  padding: var(--sp-5);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+}
+
+.transactions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--sp-3);
+  padding-bottom: var(--sp-2);
+  border-bottom: 1px solid var(--border);
+}
+
+.transactions-header .section-title {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.transactions-count {
+  font-size: 0.65rem;
+  color: var(--fg-muted);
+  font-weight: 600;
+}
+
+.transactions-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 400px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding-right: var(--sp-1);
+}
+
+.transaction-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--sp-3) 0;
+  border-bottom: 1px solid var(--border);
+  transition: background var(--t-fast);
+}
+
+.transaction-item:last-child {
+  border-bottom: none;
+}
+
+.transaction-item:hover {
+  background: var(--bg-elevated);
+  padding-left: var(--sp-2);
+  padding-right: var(--sp-2);
+  margin: 0 calc(-1 * var(--sp-2));
+}
+
+.tx-left {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.tx-category-icon {
+  width: 28px;
+  height: 28px;
+  background: var(--accent-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  color: var(--accent);
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+.tx-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.tx-merchant {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--fg);
+  font-family: var(--font-mono);
+}
+
+.tx-category {
+  font-size: 0.65rem;
+  color: var(--fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.tx-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.tx-amount {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.tx-amount.credit {
+  color: var(--success);
+}
+
+.tx-amount.debit {
+  color: var(--fg);
+}
+
+.tx-date {
+  font-size: 0.65rem;
+  color: var(--fg-muted);
+  font-family: var(--font-mono);
+}
+
+/* ─── Empty State ─── */
+.empty-state {
+  text-align: center;
+  padding: var(--sp-10) var(--sp-4);
+}
+
+.empty-icon {
+  font-size: 2rem;
+  color: var(--fg-muted);
+  display: block;
+  margin-bottom: var(--sp-3);
+}
+
+.empty-state p {
+  font-size: 0.75rem;
+  color: var(--fg-muted);
+}
