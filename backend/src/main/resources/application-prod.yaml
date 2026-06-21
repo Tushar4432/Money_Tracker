@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://postgres:5432/money_tracker
+    url: jdbc:postgresql://postgres:xFVpKXwvUmCuepiZgmklihKXxGkeAGYI@postgres.railway.internal:5432/railway
     username: postgres
-    password: 1234
+    password: xFVpKXwvUmCuepiZgmklihKXxGkeAGYI
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
