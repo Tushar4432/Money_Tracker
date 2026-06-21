@@ -30,35 +30,30 @@ public class AnalyticsService {
     /**
      * Returns overall spending summary for a user: total income, expense, net savings,
      * top spending category, and transaction count.
+     * <p>
+     * Uses database-level aggregate queries (SUM, COUNT, GROUP BY) instead of
+     * loading all transactions into memory. This is dramatically faster for
+     * users with many transactions.
      */
     public SpendingSummary getSpendingSummary(String userId) {
-        List<Transaction> transactions = getTransactions(userId);
+        if (transactionRepository == null || userId == null || userId.isBlank()) {
+            return new SpendingSummary(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, "N/A", 0);
+        }
 
-        BigDecimal totalIncome = transactions.stream()
-                .filter(t -> "CREDIT".equals(t.getType()))
-                .map(Transaction::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        BigDecimal totalExpense = transactions.stream()
-                .filter(t -> "DEBIT".equals(t.getType()))
-                .map(Transaction::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
+        BigDecimal totalIncome = transactionRepository.sumIncomeByUserId(userId);
+        BigDecimal totalExpense = transactionRepository.sumExpenseByUserId(userId);
         BigDecimal netSavings = totalIncome.subtract(totalExpense);
 
-        String topCategory = transactions.stream()
-                .filter(t -> "DEBIT".equals(t.getType()))
-                .filter(t -> t.getCategory() != null)
-                .collect(Collectors.groupingBy(
-                        Transaction::getCategory,
-                        Collectors.reducing(BigDecimal.ZERO, Transaction::getAmount, BigDecimal::add)
-                ))
-                .entrySet().stream()
-                .max(Map.Entry.comparingByValue())
-                .map(Map.Entry::getKey)
-                .orElse("N/A");
+        // Find top spending category via DB aggregation
+        String topCategory = "N/A";
+        List<Object[]> topCatResult = transactionRepository.findTopCategoryByUserId(userId);
+        if (!topCatResult.isEmpty() && topCatResult.get(0)[0] != null) {
+            topCategory = (String) topCatResult.get(0)[0];
+        }
 
-        return new SpendingSummary(totalIncome, totalExpense, netSavings, topCategory, transactions.size());
+        int txnCount = transactionRepository.countByUserId(userId);
+
+        return new SpendingSummary(totalIncome, totalExpense, netSavings, topCategory, txnCount);
     }
 
     /**

@@ -54,12 +54,20 @@ class ApiClient {
       headers['Content-Type'] = headers['Content-Type'] || 'application/json';
     }
 
-    const config = { ...options, headers };
+    // Build config: merge options + headers, but do NOT include signal in headers spread
+    const { signal, ...restOptions } = options;
+    const config = { ...restOptions, headers };
+    if (signal) {
+      config.signal = signal;
+    }
 
     let response;
     try {
       response = await fetch(url, config);
     } catch (networkError) {
+      if (networkError.name === 'AbortError') {
+        throw networkError; // re-throw abort errors as-is
+      }
       throw new Error('Cannot connect to server. Make sure the backend is running on http://localhost:8080');
     }
 

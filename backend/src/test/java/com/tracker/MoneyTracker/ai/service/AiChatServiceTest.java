@@ -16,6 +16,7 @@ import org.mockito.quality.Strictness;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.concurrent.Executor;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -42,7 +43,9 @@ class AiChatServiceTest {
 
     @BeforeEach
     void setUp() {
-        sut = new AiChatService(ollamaClient, chatRepository, analyticsService, goalService);
+        // Use a synchronous executor so CompletableFuture runs in the same thread during tests
+        Executor directExecutor = Runnable::run;
+        sut = new AiChatService(ollamaClient, chatRepository, analyticsService, goalService, directExecutor);
 
         // Stub common dependencies used during prompt building
         when(analyticsService.getSpendingSummary(any())).thenReturn(

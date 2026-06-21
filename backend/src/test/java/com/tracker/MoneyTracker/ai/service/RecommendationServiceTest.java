@@ -14,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.concurrent.Executor;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -33,7 +34,8 @@ class RecommendationServiceTest {
 
     @BeforeEach
     void setUp() {
-        sut = new RecommendationService(ollamaClient, analyticsService);
+        Executor directExecutor = Runnable::run;
+        sut = new RecommendationService(ollamaClient, analyticsService, directExecutor);
     }
 
     @Test

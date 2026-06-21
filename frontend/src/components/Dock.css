@@ -1,29 +1,23 @@
-/* ─── Dock: Left-side vertical sidebar ─── */
+/* ─── Dock: Brutalist Left Sidebar ─── */
+
 .dock-outer {
   position: fixed;
-  left: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
+  left: 0;
+  top: 0;
+  bottom: 0;
   z-index: 1000;
-  pointer-events: none;
+  width: 56px;
+  border-right: 1px solid var(--border);
+  background: var(--bg-surface);
 }
 
 .dock-panel {
-  pointer-events: auto;
-  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: fit-content;
-  gap: 0.5rem;
-  border-radius: 1rem;
-  background: rgba(6, 10, 20, 0.82);
-  backdrop-filter: blur(24px) saturate(1.4);
-  -webkit-backdrop-filter: blur(24px) saturate(1.4);
-  border: 1px solid rgba(148, 163, 184, 0.1);
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.5),
-    0 1px 0 rgba(255, 255, 255, 0.06) inset;
+  height: 100%;
+  padding: var(--sp-4) 0;
+  gap: var(--sp-1);
 }
 
 /* ─── Dock Item ─── */
@@ -32,31 +26,30 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
-  background: rgba(12, 18, 32, 0.5);
-  border: 1px solid rgba(148, 163, 184, 0.07);
-  box-shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.3),
-    0 2px 4px -1px rgba(0, 0, 0, 0.15);
+  width: 40px;
+  height: 40px;
+  color: var(--fg-muted);
+  border: 1px solid transparent;
   cursor: pointer;
-  outline: none;
+  transition: color var(--t-fast), border-color var(--t-fast), background var(--t-fast);
   flex-shrink: 0;
-  will-change: height;
-  transition: background var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
-.dock-item:hover,
-.dock-item:focus-visible {
-  border-color: rgba(0, 240, 255, 0.25);
-  background: rgba(12, 18, 32, 0.7);
-  box-shadow:
-    0 4px 6px -1px rgba(0, 0, 0, 0.3),
-    0 0 20px rgba(0, 240, 255, 0.1);
+.dock-item:hover {
+  color: var(--fg-dim);
+  border-color: var(--border);
+  background: var(--bg-elevated);
 }
 
 .dock-item.active {
-  border-color: rgba(0, 240, 255, 0.2);
-  background: rgba(0, 240, 255, 0.06);
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.dock-item:focus-visible {
+  border-color: var(--accent);
+  outline: none;
 }
 
 /* ─── Icon ─── */
@@ -64,41 +57,52 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.15rem;
-  color: var(--text-secondary);
+  font-size: 1rem;
+  line-height: 1;
   pointer-events: none;
-  transition: color 0.2s ease;
 }
 
-.dock-item:hover .dock-icon,
-.dock-item:focus-visible .dock-icon {
-  color: var(--accent-cyan);
-}
-
-.dock-item.active .dock-icon {
-  color: var(--accent-cyan);
-}
-
-/* ─── Label (positioned absolute to panel, not clipped by item) ─── */
+/* ─── Label (shown on hover via sibling selector) ─── */
 .dock-label {
   position: absolute;
-  left: calc(100% + 10px);
+  left: calc(100% + 8px);
   white-space: nowrap;
-  border-radius: 0.5rem;
-  border: 1px solid rgba(148, 163, 184, 0.1);
-  background: rgba(6, 10, 20, 0.92);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  padding: 0.3rem 0.75rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  padding: 2px 8px;
+  background: var(--bg);
+  border: 1px solid var(--border-bright);
+  color: var(--fg);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   pointer-events: none;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity var(--t-fast), transform var(--t-fast);
   z-index: 2;
-  will-change: opacity, transform;
 }
 
-.dock-label-text {
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  display: block;
+.dock-item:hover .dock-label {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ─── Bottom section (status) ─── */
+.dock-bottom {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.dock-status-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--success);
+  border: 1px solid var(--bg);
+}
+
+.dock-status-dot.offline {
+  background: var(--danger);
 }

@@ -9,12 +9,13 @@ spring:
       ddl-auto: update
     show-sql: false
 
-# Ollama is accessible via Docker internal network
+# Ollama runs natively on Windows (GPU-accelerated), not in Docker.
+# host.docker.internal resolves to the host machine from inside a container.
 ollama:
-  base-url: http://ollama:11434
+  base-url: http://host.docker.internal:11434
   model: llama3.2
   temperature: 0.7
-  max-tokens: 2048
+  max-tokens: 512
 
 # CORS: allow the frontend origin
 cors:

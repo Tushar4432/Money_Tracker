@@ -12,8 +12,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import org.springframework.beans.factory.annotation.Qualifier;
+
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
 /**
@@ -33,15 +37,18 @@ public class AiChatService {
     private final AiChatMessageRepository chatRepository;
     private final AnalyticsService analyticsService;
     private final GoalService goalService;
+    private final Executor aiExecutor;
 
     public AiChatService(OllamaClient ollamaClient,
                          AiChatMessageRepository chatRepository,
                          AnalyticsService analyticsService,
-                         GoalService goalService) {
+                         GoalService goalService,
+                         @Qualifier("aiExecutor") Executor aiExecutor) {
         this.ollamaClient = ollamaClient;
         this.chatRepository = chatRepository;
         this.analyticsService = analyticsService;
         this.goalService = goalService;
+        this.aiExecutor = aiExecutor;
     }
 
     /**
@@ -59,9 +66,14 @@ public class AiChatService {
      * @return the AI's response wrapped in a ChatResponse
      */
     public ChatResponse chat(String userId, String message) {
-        // Build context-aware prompt
-        String context = buildFinancialContext(userId);
-        String history = buildChatHistory(userId);
+        // Build context-aware prompt — fetch financial data and chat history in parallel
+        CompletableFuture<String> contextFuture = CompletableFuture.supplyAsync(
+                () -> buildFinancialContext(userId), aiExecutor);
+        CompletableFuture<String> historyFuture = CompletableFuture.supplyAsync(
+                () -> buildChatHistory(userId), aiExecutor);
+
+        String context = contextFuture.join();
+        String history = historyFuture.join();
         String systemPrompt = buildSystemPrompt(context, history);
 
         // Wrap the user's message with the CA persona context

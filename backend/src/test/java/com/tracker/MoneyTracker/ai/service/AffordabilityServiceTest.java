@@ -12,6 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.concurrent.Executor;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -33,7 +34,8 @@ class AffordabilityServiceTest {
 
     @BeforeEach
     void setUp() {
-        sut = new AffordabilityService(ollamaClient, analyticsService, goalService);
+        Executor directExecutor = Runnable::run;
+        sut = new AffordabilityService(ollamaClient, analyticsService, goalService, directExecutor);
     }
 
     @Test

@@ -10,12 +10,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import org.springframework.beans.factory.annotation.Qualifier;
+
 import java.time.LocalDate;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 /**
  * Generates personalized financial recommendations by analyzing spending patterns
  * and feeding them to the local LLM.
+ * <p>
+ * Data fetching is parallelized: spending summary, category breakdown, and monthly
+ * trends are independent queries dispatched concurrently before a single LLM call.
  */
 @Service
 public class RecommendationService {
@@ -24,10 +31,14 @@ public class RecommendationService {
 
     private final OllamaClient ollamaClient;
     private final AnalyticsService analyticsService;
+    private final Executor aiExecutor;
 
-    public RecommendationService(OllamaClient ollamaClient, AnalyticsService analyticsService) {
+    public RecommendationService(OllamaClient ollamaClient,
+                                 AnalyticsService analyticsService,
+                                 @Qualifier("aiExecutor") Executor aiExecutor) {
         this.ollamaClient = ollamaClient;
         this.analyticsService = analyticsService;
+        this.aiExecutor = aiExecutor;
     }
 
     /**
@@ -47,53 +58,75 @@ public class RecommendationService {
     }
 
     private String buildRecommendationPrompt(String userId) {
+        // Fetch all three data sources in parallel — they are independent DB queries
+        CompletableFuture<SpendingSummary> summaryFuture = CompletableFuture.supplyAsync(
+                () -> {
+                    try {
+                        return analyticsService.getSpendingSummary(userId);
+                    } catch (Exception e) {
+                        log.warn("Could not fetch spending summary for recommendations", e);
+                        return null;
+                    }
+                }, aiExecutor);
+
+        CompletableFuture<List<CategoryBreakdown>> breakdownFuture = CompletableFuture.supplyAsync(
+                () -> {
+                    try {
+                        return analyticsService.getCategoryBreakdown(
+                                userId,
+                                LocalDate.now().minusMonths(3),
+                                LocalDate.now());
+                    } catch (Exception e) {
+                        log.warn("Could not fetch category breakdown for recommendations", e);
+                        return List.<CategoryBreakdown>of();
+                    }
+                }, aiExecutor);
+
+        CompletableFuture<List<MonthlyTrend>> trendsFuture = CompletableFuture.supplyAsync(
+                () -> {
+                    try {
+                        return analyticsService.getMonthlyTrends(userId, 6);
+                    } catch (Exception e) {
+                        log.warn("Could not fetch monthly trends for recommendations", e);
+                        return List.<MonthlyTrend>of();
+                    }
+                }, aiExecutor);
+
+        // Await all three results
+        SpendingSummary summary = summaryFuture.join();
+        List<CategoryBreakdown> breakdown = breakdownFuture.join();
+        List<MonthlyTrend> trends = trendsFuture.join();
+
         StringBuilder prompt = new StringBuilder();
         prompt.append("You are a personal financial coach. Based on the following financial data, ");
         prompt.append("provide 3-5 specific, actionable recommendations to help this user save more money ");
         prompt.append("and improve their financial health. Format each recommendation as a separate line.\n\n");
 
-        try {
-            SpendingSummary summary = analyticsService.getSpendingSummary(userId);
+        if (summary != null) {
             prompt.append("Financial Summary:\n");
             prompt.append("- Total Income: ").append(summary.totalIncome()).append("\n");
             prompt.append("- Total Expenses: ").append(summary.totalExpense()).append("\n");
             prompt.append("- Net Savings: ").append(summary.netSavings()).append("\n");
             prompt.append("- Top Spending Category: ").append(summary.topCategory()).append("\n");
             prompt.append("- Transaction Count: ").append(summary.transactionCount()).append("\n\n");
-        } catch (Exception e) {
-            log.warn("Could not fetch spending summary for recommendations", e);
         }
 
-        try {
-            List<CategoryBreakdown> breakdown = analyticsService.getCategoryBreakdown(
-                    userId,
-                    LocalDate.now().minusMonths(3),
-                    LocalDate.now()
-            );
-            if (!breakdown.isEmpty()) {
-                prompt.append("Category Breakdown (last 3 months):\n");
-                for (CategoryBreakdown cat : breakdown) {
-                    prompt.append("- ").append(cat.category()).append(": ")
-                            .append(cat.amount()).append(" (").append(String.format("%.1f%%", cat.percentage())).append(")\n");
-                }
-                prompt.append("\n");
+        if (!breakdown.isEmpty()) {
+            prompt.append("Category Breakdown (last 3 months):\n");
+            for (CategoryBreakdown cat : breakdown) {
+                prompt.append("- ").append(cat.category()).append(": ")
+                        .append(cat.amount()).append(" (").append(String.format("%.1f%%", cat.percentage())).append(")\n");
             }
-        } catch (Exception e) {
-            log.warn("Could not fetch category breakdown for recommendations", e);
+            prompt.append("\n");
         }
 
-        try {
-            List<MonthlyTrend> trends = analyticsService.getMonthlyTrends(userId, 6);
-            if (!trends.isEmpty()) {
-                prompt.append("Monthly Spending Trends (last 6 months):\n");
-                for (MonthlyTrend trend : trends) {
-                    prompt.append("- ").append(trend.month()).append(": Income=")
-                            .append(trend.income()).append(", Expense=").append(trend.expense())
-                            .append(", Net=").append(trend.net()).append("\n");
-                }
+        if (!trends.isEmpty()) {
+            prompt.append("Monthly Spending Trends (last 6 months):\n");
+            for (MonthlyTrend trend : trends) {
+                prompt.append("- ").append(trend.month()).append(": Income=")
+                        .append(trend.income()).append(", Expense=").append(trend.expense())
+                        .append(", Net=").append(trend.net()).append("\n");
             }
-        } catch (Exception e) {
-            log.warn("Could not fetch monthly trends for recommendations", e);
         }
 
         prompt.append("\nProvide your recommendations now:");

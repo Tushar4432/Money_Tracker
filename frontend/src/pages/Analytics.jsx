@@ -7,10 +7,10 @@ import './Analytics.css';
 // ─── Period Filter ───
 function PeriodFilter({ value, onChange }) {
   const periods = [
-    { label: 'Monthly', value: 'MONTHLY' },
-    { label: 'Quarterly', value: 'QUARTERLY' },
-    { label: 'Half-Yearly', value: 'HALF_YEARLY' },
-    { label: 'Yearly', value: 'YEARLY' },
+    { label: 'MONTHLY', value: 'MONTHLY' },
+    { label: 'QUARTERLY', value: 'QUARTERLY' },
+    { label: 'HALF-YEARLY', value: 'HALF_YEARLY' },
+    { label: 'YEARLY', value: 'YEARLY' },
   ];
   return (
     <div className="period-filter">
@@ -24,13 +24,12 @@ function PeriodFilter({ value, onChange }) {
 }
 
 // ─── Donut Chart ───
-// Backend: CategoryBreakdown { category, amount, percentage }
 function DonutChart({ data }) {
   if (!Array.isArray(data) || data.length === 0) {
     return (
       <div className="chart-empty">
-        <span>◯</span>
-        <p>No data available yet. Upload a statement to see your breakdown.</p>
+        <span>○</span>
+        <p>No data. Upload a statement to see breakdown.</p>
       </div>
     );
   }
@@ -38,14 +37,14 @@ function DonutChart({ data }) {
   const total = data.reduce((sum, d) => sum + Number(d.amount || 0), 0);
   if (total <= 0) {
     return (
-      <div className="chart-empty"><span>◯</span><p>No spending data to display.</p></div>
+      <div className="chart-empty"><span>○</span><p>No spending data.</p></div>
     );
   }
 
   const cx = 100, cy = 100, r = 70;
   const circumference = 2 * Math.PI * r;
   const stroke = 28;
-  const colors = ['#00f0ff','#10b981','#f59e0b','#f43f5e','#8b5cf6','#3b82f6','#ec4899','#14b8a6'];
+  const colors = ['#f0a030', '#4ade80', '#60a5fa', '#f87171', '#a78bfa', '#34d399', '#fb923c', '#e879f9'];
 
   const segments = [];
   data.forEach((d, i) => {
@@ -65,14 +64,14 @@ function DonutChart({ data }) {
             return (
               <circle key={i} cx={cx} cy={cy} r={r} fill="none" stroke={seg.color}
                 strokeWidth={stroke} strokeDasharray={`${dashLen} ${gapLen}`}
-                strokeDashoffset={offset} strokeLinecap="round" />
+                strokeDashoffset={offset} strokeLinecap="butt" />
             );
           })}
         </g>
         <text x="100" y="95" textAnchor="middle" className="donut-total">
           ₹{total.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
         </text>
-        <text x="100" y="115" textAnchor="middle" className="donut-label">Total</text>
+        <text x="100" y="115" textAnchor="middle" className="donut-label">TOTAL</text>
       </svg>
       <div className="donut-legend">
         {segments.map((seg, i) => (
@@ -89,23 +88,20 @@ function DonutChart({ data }) {
 }
 
 // ─── Bar Chart ───
-// Backend: MonthlyTrend { month, income, expense, net }
-// We show expense per month
 function BarChart({ data }) {
   if (!Array.isArray(data) || data.length === 0) {
     return (
-      <div className="chart-empty"><span>◯</span><p>No trend data available yet.</p></div>
+      <div className="chart-empty"><span>○</span><p>No trend data.</p></div>
     );
   }
 
   const safeData = data.filter(d => d != null);
   if (safeData.length === 0) {
     return (
-      <div className="chart-empty"><span>◯</span><p>No trend data available.</p></div>
+      <div className="chart-empty"><span>○</span><p>No trend data.</p></div>
     );
   }
 
-  // Use expense for the bar chart (spending per month)
   const values = safeData.map(d => Number(d.expense || d.amount || d.totalSpending || 0));
   const maxVal = Math.max(...values, 1);
   const barWidth = Math.max(24, Math.min(60, (500 / safeData.length) - 12));
@@ -117,12 +113,6 @@ function BarChart({ data }) {
     <div className="bar-chart-wrapper">
       <svg width="100%" height={chartH + 40} viewBox={`0 0 ${chartW} ${chartH + 40}`}
         className="bar-chart" preserveAspectRatio="xMidYMid meet">
-        <defs>
-          <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#00f0ff" stopOpacity="0.9" />
-            <stop offset="100%" stopColor="#00a0e0" stopOpacity="0.4" />
-          </linearGradient>
-        </defs>
         {safeData.map((d, i) => {
           const val = Number(d.expense || d.amount || d.totalSpending || 0);
           const barH = maxVal > 0 ? (val / maxVal) * (chartH - 50) : 0;
@@ -131,8 +121,8 @@ function BarChart({ data }) {
           const label = d.month || d.period || d.label || `${i + 1}`;
           return (
             <g key={i}>
-              <rect x={x} y={y} width={barWidth} height={Math.max(barH, 0)} rx="6"
-                fill="url(#barGradient)" className="bar-rect" />
+              <rect x={x} y={y} width={barWidth} height={Math.max(barH, 0)}
+                fill="var(--accent)" className="bar-rect" />
               <text x={x + barWidth / 2} y={y - 6} textAnchor="middle" className="bar-value">
                 {val > 0 ? `₹${(val / 1000).toFixed(0)}k` : '₹0'}
               </text>
@@ -148,12 +138,10 @@ function BarChart({ data }) {
 }
 
 // ─── Comparison Table ───
-// Backend: SpendingComparison { currentPeriod, previousPeriod, currentTotal, previousTotal, changeAmount, changePercentage, categoryComparisons: [{category, currentAmount, previousAmount, changeAmount, changePercentage}] }
 function ComparisonTable({ data }) {
-  // data is the full SpendingComparison object
   if (!data || typeof data !== 'object') {
     return (
-      <div className="chart-empty"><span>◯</span><p>No comparison data available yet.</p></div>
+      <div className="chart-empty"><span>○</span><p>No comparison data.</p></div>
     );
   }
 
@@ -161,20 +149,19 @@ function ComparisonTable({ data }) {
 
   return (
     <div className="comparison-table-wrapper">
-      {/* Period summary */}
       <div className="comparison-summary">
         <div className="comparison-summary-row">
-          <span>Current Period</span>
+          <span>CURRENT</span>
           <span className="comparison-value">{data.currentPeriod || '—'}</span>
         </div>
         <div className="comparison-summary-row">
-          <span>Previous Period</span>
+          <span>PREVIOUS</span>
           <span className="comparison-value">{data.previousPeriod || '—'}</span>
         </div>
         <div className="comparison-summary-row">
-          <span>Change</span>
+          <span>CHANGE</span>
           <span className={`comparison-value ${(Number(data.changeAmount) || 0) > 0 ? 'negative' : 'positive'}`}>
-            {(Number(data.changeAmount) || 0) > 0 ? '↑' : '↓'} ₹{Math.abs(Number(data.changeAmount) || 0).toLocaleString('en-IN')}
+            {(Number(data.changeAmount) || 0) > 0 ? '▲' : '▼'} ₹{Math.abs(Number(data.changeAmount) || 0).toLocaleString('en-IN')}
             {data.changePercentage != null ? ` (${Number(data.changePercentage).toFixed(1)}%)` : ''}
           </span>
         </div>
@@ -182,14 +169,14 @@ function ComparisonTable({ data }) {
 
       {categories.length > 0 && (
         <>
-          <h4 className="comparison-subtitle">By Category</h4>
+          <h4 className="comparison-subtitle">BY CATEGORY</h4>
           <table className="comparison-table">
             <thead>
               <tr>
-                <th>Category</th>
-                <th>Current</th>
-                <th>Previous</th>
-                <th>Change</th>
+                <th>CATEGORY</th>
+                <th>CURRENT</th>
+                <th>PREVIOUS</th>
+                <th>CHANGE</th>
               </tr>
             </thead>
             <tbody>
@@ -206,7 +193,7 @@ function ComparisonTable({ data }) {
                     <td>₹{current.toLocaleString('en-IN')}</td>
                     <td className="muted">₹{previous.toLocaleString('en-IN')}</td>
                     <td className={`change-cell ${isPositive ? 'negative' : 'positive'}`}>
-                      {isPositive ? '↑' : '↓'} ₹{Math.abs(change).toLocaleString('en-IN')}
+                      {isPositive ? '▲' : '▼'} ₹{Math.abs(change).toLocaleString('en-IN')}
                     </td>
                   </tr>
                 );
@@ -220,13 +207,12 @@ function ComparisonTable({ data }) {
 }
 
 // ─── Budget Status ───
-// Backend: BudgetStatus { category, targetAmount, spentAmount, remainingAmount, percentageUsed, period }
 function BudgetStatus({ data }) {
   if (!Array.isArray(data) || data.length === 0) {
     return (
       <div className="chart-empty">
-        <span>◯</span>
-        <p>No budget goals set. Create goals to track your budget.</p>
+        <span>○</span>
+        <p>No budget goals set.</p>
       </div>
     );
   }
@@ -241,8 +227,8 @@ function BudgetStatus({ data }) {
         const remaining = Math.max(budget - spent, 0);
 
         return (
-          <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }} className="budget-item">
+          <motion.div key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            transition={{ delay: i * 0.05 }} className="budget-item">
             <div className="budget-header">
               <span className="budget-category">{item.category || 'Category'}</span>
               <span className={`budget-amount ${isOver ? 'over' : ''}`}>
@@ -252,11 +238,10 @@ function BudgetStatus({ data }) {
             <div className="budget-bar">
               <motion.div className={`budget-fill ${isOver ? 'over' : ''}`}
                 initial={{ width: 0 }} animate={{ width: `${pct}%` }}
-                transition={{ duration: 0.8, delay: i * 0.1 }} />
+                transition={{ duration: 0.6, delay: i * 0.05 }} />
             </div>
             <span className={`budget-pct ${isOver ? 'over' : ''}`}>
-              {isOver ? 'Over budget! ' : ''}{pct.toFixed(0)}% used
-              {!isOver && remaining > 0 ? ` · ₹${remaining.toLocaleString('en-IN')} left` : ''}
+              {isOver ? 'OVER BUDGET' : `${pct.toFixed(0)}% · ₹${remaining.toLocaleString('en-IN')} left`}
             </span>
           </motion.div>
         );
@@ -273,7 +258,7 @@ const Analytics = () => {
   const [error, setError] = useState(null);
   const [categories, setCategories] = useState([]);
   const [trends, setTrends] = useState([]);
-  const [comparison, setComparison] = useState(null);  // single object, not array
+  const [comparison, setComparison] = useState(null);
   const [budget, setBudget] = useState([]);
   const [summary, setSummary] = useState(null);
 
@@ -306,7 +291,6 @@ const Analytics = () => {
       setTrends([]);
     }
 
-    // Comparison is a single SpendingComparison object (not an array)
     if (compRes.status === 'fulfilled') {
       setComparison(compRes.value && typeof compRes.value === 'object' ? compRes.value : null);
     } else {
@@ -327,7 +311,7 @@ const Analytics = () => {
 
     const allFailed = results.every(r => r.status === 'rejected');
     if (allFailed) {
-      setError('Failed to load analytics data. Please try again.');
+      setError('Failed to load analytics data.');
     }
 
     setLoading(false);
@@ -346,38 +330,38 @@ const Analytics = () => {
 
   return (
     <div className="page-container analytics-page">
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="page-header">
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="page-header">
         <div>
-          <h1 className="page-title"><span className="gradient-text">Analytics</span></h1>
-          <p className="page-subtitle">Deep dive into your spending patterns and trends</p>
+          <h1 className="page-title">▤ ANALYTICS</h1>
+          <p className="page-subtitle">Spending patterns and trends</p>
         </div>
         <PeriodFilter value={period} onChange={setPeriod} />
       </motion.div>
 
       {error && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="analytics-error">
-          <span>⚠</span> {error}
+          ! {error}
         </motion.div>
       )}
 
-      {/* Quick Stats from SpendingSummary */}
+      {/* Quick Stats */}
       {summary && (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }} className="analytics-quick-stats">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+          transition={{ delay: 0.05 }} className="analytics-quick-stats">
           <div className="quick-stat">
-            <span className="quick-stat-label">Total Income</span>
+            <span className="quick-stat-label">INCOME</span>
             <span className="quick-stat-value">{fmt(summary.totalIncome)}</span>
           </div>
           <div className="quick-stat">
-            <span className="quick-stat-label">Total Expenses</span>
+            <span className="quick-stat-label">EXPENSES</span>
             <span className="quick-stat-value">{fmt(summary.totalExpense)}</span>
           </div>
           <div className="quick-stat">
-            <span className="quick-stat-label">Net Savings</span>
+            <span className="quick-stat-label">NET_SAVINGS</span>
             <span className="quick-stat-value">{fmt(summary.netSavings)}</span>
           </div>
           <div className="quick-stat">
-            <span className="quick-stat-label">Transactions</span>
+            <span className="quick-stat-label">TRANSACTIONS</span>
             <span className="quick-stat-value">{summary.transactionCount ?? '—'}</span>
           </div>
         </motion.div>
@@ -397,27 +381,27 @@ const Analytics = () => {
       {/* Charts Grid */}
       {!loading && (
         <div className="analytics-grid">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }} className="analytics-card">
-            <h3 className="card-title">Spending by Category</h3>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            transition={{ delay: 0.1 }} className="analytics-card">
+            <h3 className="card-title">SPENDING BY CATEGORY</h3>
             <DonutChart data={categories} />
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }} className="analytics-card">
-            <h3 className="card-title">Spending Trends</h3>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            transition={{ delay: 0.15 }} className="analytics-card">
+            <h3 className="card-title">SPENDING TRENDS</h3>
             <BarChart data={trends} />
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25 }} className="analytics-card">
-            <h3 className="card-title">Period Comparison</h3>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }} className="analytics-card">
+            <h3 className="card-title">PERIOD COMPARISON</h3>
             <ComparisonTable data={comparison} />
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }} className="analytics-card">
-            <h3 className="card-title">Budget Status</h3>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            transition={{ delay: 0.25 }} className="analytics-card">
+            <h3 className="card-title">BUDGET STATUS</h3>
             <BudgetStatus data={budget} />
           </motion.div>
         </div>

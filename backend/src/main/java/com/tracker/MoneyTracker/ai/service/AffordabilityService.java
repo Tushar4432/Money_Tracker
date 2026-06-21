@@ -10,13 +10,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import org.springframework.beans.factory.annotation.Qualifier;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 /**
  * Analyzes whether a user can afford a specific purchase based on their
  * financial data. Combines deterministic checks with AI-generated advice.
+ * <p>
+ * Spending summary and goal evaluation are fetched in parallel to minimize
+ * total latency before the LLM call.
  */
 @Service
 public class AffordabilityService {
@@ -29,13 +36,16 @@ public class AffordabilityService {
     private final OllamaClient ollamaClient;
     private final AnalyticsService analyticsService;
     private final GoalService goalService;
+    private final Executor aiExecutor;
 
     public AffordabilityService(OllamaClient ollamaClient,
                                AnalyticsService analyticsService,
-                               GoalService goalService) {
+                               GoalService goalService,
+                               @Qualifier("aiExecutor") Executor aiExecutor) {
         this.ollamaClient = ollamaClient;
         this.analyticsService = analyticsService;
         this.goalService = goalService;
+        this.aiExecutor = aiExecutor;
     }
 
     /**
@@ -47,13 +57,27 @@ public class AffordabilityService {
      * @return affordability analysis
      */
     public AffordabilityResponse analyze(String userId, String itemName, BigDecimal cost) {
-        SpendingSummary summary = analyticsService.getSpendingSummary(userId);
+        // Fetch spending summary and goals in parallel — independent DB queries
+        CompletableFuture<SpendingSummary> summaryFuture = CompletableFuture.supplyAsync(
+                () -> analyticsService.getSpendingSummary(userId), aiExecutor);
+        CompletableFuture<List<GoalProgress>> goalsFuture = CompletableFuture.supplyAsync(
+                () -> {
+                    try {
+                        return goalService.evaluateAllGoals(userId);
+                    } catch (Exception e) {
+                        log.warn("Could not fetch goals for affordability analysis", e);
+                        return List.<GoalProgress>of();
+                    }
+                }, aiExecutor);
+
+        SpendingSummary summary = summaryFuture.join();
+        List<GoalProgress> goals = goalsFuture.join();
 
         // Deterministic affordability check
         boolean affordable = isAffordable(cost, summary);
 
         // Build context for LLM
-        String prompt = buildAffordabilityPrompt(userId, itemName, cost, summary);
+        String prompt = buildAffordabilityPrompt(itemName, cost, summary, goals);
         String analysis = ollamaClient.generate(prompt);
 
         return new AffordabilityResponse(userId, itemName, cost, affordable, analysis);
@@ -86,7 +110,8 @@ public class AffordabilityService {
         return false;
     }
 
-    private String buildAffordabilityPrompt(String userId, String itemName, BigDecimal cost, SpendingSummary summary) {
+    private String buildAffordabilityPrompt(String itemName, BigDecimal cost,
+                                            SpendingSummary summary, List<GoalProgress> goals) {
         StringBuilder prompt = new StringBuilder();
         prompt.append("You are a personal financial coach. A user wants to know if they can afford a purchase.\n\n");
 
@@ -99,18 +124,13 @@ public class AffordabilityService {
         prompt.append("- Net Savings: ").append(summary.netSavings()).append("\n");
         prompt.append("- Top Spending Category: ").append(summary.topCategory()).append("\n\n");
 
-        try {
-            List<GoalProgress> goals = goalService.evaluateAllGoals(userId);
-            if (!goals.isEmpty()) {
-                prompt.append("Active Goals:\n");
-                for (GoalProgress goal : goals) {
-                    prompt.append(String.format("- Goal %s: %.1f%% of budget used\n",
-                            goal.goalId(), goal.percentageUsed()));
-                }
-                prompt.append("\n");
+        if (!goals.isEmpty()) {
+            prompt.append("Active Goals:\n");
+            for (GoalProgress goal : goals) {
+                prompt.append(String.format("- Goal %s: %.1f%% of budget used\n",
+                        goal.goalId(), goal.percentageUsed()));
             }
-        } catch (Exception e) {
-            log.warn("Could not fetch goals for affordability analysis", e);
+            prompt.append("\n");
         }
 
         prompt.append("Provide a concise analysis (2-3 paragraphs):\n");

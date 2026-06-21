@@ -54,13 +54,10 @@ class AnalyticsServiceTest {
         void shouldReturnCorrectTotals() {
             // Arrange
             String userId = "user-123";
-            LocalDate date = LocalDate.of(2026, 3, 15);
-            List<Transaction> transactions = List.of(
-                    createTransaction("t1", userId, date, new BigDecimal("5000.00"), "CREDIT", "INCOME", "Salary"),
-                    createTransaction("t2", userId, date, new BigDecimal("100.00"), "DEBIT", "FOOD", "Swiggy"),
-                    createTransaction("t3", userId, date, new BigDecimal("200.00"), "DEBIT", "TRANSPORT", "Petrol")
-            );
-            given(transactionRepository.findByUserId(userId)).willReturn(transactions);
+            given(transactionRepository.sumIncomeByUserId(userId)).willReturn(new BigDecimal("5000.00"));
+            given(transactionRepository.sumExpenseByUserId(userId)).willReturn(new BigDecimal("300.00"));
+            given(transactionRepository.countByUserId(userId)).willReturn(3);
+            given(transactionRepository.findTopCategoryByUserId(userId)).willReturn(List.<Object[]>of(new Object[]{"TRANSPORT", new BigDecimal("200.00")}));
 
             // Act
             var summary = sut.getSpendingSummary(userId);
@@ -70,6 +67,7 @@ class AnalyticsServiceTest {
             assertThat(summary.totalExpense()).isEqualByComparingTo(new BigDecimal("300.00"));
             assertThat(summary.netSavings()).isEqualByComparingTo(new BigDecimal("4700.00"));
             assertThat(summary.transactionCount()).isEqualTo(3);
+            assertThat(summary.topCategory()).isEqualTo("TRANSPORT");
         }
 
         @Test
@@ -77,13 +75,10 @@ class AnalyticsServiceTest {
         void shouldIdentifyTopCategory() {
             // Arrange
             String userId = "user-123";
-            LocalDate date = LocalDate.of(2026, 3, 15);
-            List<Transaction> transactions = List.of(
-                    createTransaction("t1", userId, date, new BigDecimal("500.00"), "DEBIT", "FOOD", "Swiggy"),
-                    createTransaction("t2", userId, date, new BigDecimal("1000.00"), "DEBIT", "RENT", "Rent"),
-                    createTransaction("t3", userId, date, new BigDecimal("200.00"), "DEBIT", "FOOD", "Zomato")
-            );
-            given(transactionRepository.findByUserId(userId)).willReturn(transactions);
+            given(transactionRepository.sumIncomeByUserId(userId)).willReturn(BigDecimal.ZERO);
+            given(transactionRepository.sumExpenseByUserId(userId)).willReturn(new BigDecimal("1700.00"));
+            given(transactionRepository.countByUserId(userId)).willReturn(3);
+            given(transactionRepository.findTopCategoryByUserId(userId)).willReturn(List.<Object[]>of(new Object[]{"RENT", new BigDecimal("1000.00")}));
 
             // Act
             var summary = sut.getSpendingSummary(userId);
@@ -97,10 +92,10 @@ class AnalyticsServiceTest {
         void shouldReturnNA_WhenNoDebits() {
             // Arrange
             String userId = "user-123";
-            List<Transaction> transactions = List.of(
-                    createTransaction("t1", userId, LocalDate.now(), new BigDecimal("5000.00"), "CREDIT", "INCOME", "Salary")
-            );
-            given(transactionRepository.findByUserId(userId)).willReturn(transactions);
+            given(transactionRepository.sumIncomeByUserId(userId)).willReturn(new BigDecimal("5000.00"));
+            given(transactionRepository.sumExpenseByUserId(userId)).willReturn(BigDecimal.ZERO);
+            given(transactionRepository.countByUserId(userId)).willReturn(1);
+            given(transactionRepository.findTopCategoryByUserId(userId)).willReturn(List.of());
 
             // Act
             var summary = sut.getSpendingSummary(userId);
@@ -113,10 +108,14 @@ class AnalyticsServiceTest {
         @DisplayName("Should return zeros when no transactions")
         void shouldReturnZeros_WhenNoTransactions() {
             // Arrange
-            given(transactionRepository.findByUserId("empty-user")).willReturn(List.of());
+            String userId = "empty-user";
+            given(transactionRepository.sumIncomeByUserId(userId)).willReturn(BigDecimal.ZERO);
+            given(transactionRepository.sumExpenseByUserId(userId)).willReturn(BigDecimal.ZERO);
+            given(transactionRepository.countByUserId(userId)).willReturn(0);
+            given(transactionRepository.findTopCategoryByUserId(userId)).willReturn(List.of());
 
             // Act
-            var summary = sut.getSpendingSummary("empty-user");
+            var summary = sut.getSpendingSummary(userId);
 
             // Assert
             assertThat(summary.totalIncome()).isEqualByComparingTo(BigDecimal.ZERO);

@@ -1,68 +1,33 @@
 import { apiClient } from './client';
 
-// AI chat can take a while (LLM processing), so we use a longer timeout
-const AI_TIMEOUT_MS = 120000; // 2 minutes
-
-function fetchWithTimeout(url, options, timeout) {
-  return new Promise((resolve, reject) => {
-    const controller = new AbortController();
-    const timer = setTimeout(() => {
-      controller.abort();
-      reject(new Error('Request timed out. The AI is taking too long to respond.'));
-    }, timeout);
-
-    fetch(url, { ...options, signal: controller.signal })
-      .then(resolve)
-      .catch(reject)
-      .finally(() => clearTimeout(timer));
-  });
-}
+// AI chat timeout — GPU inference is fast (~5s), but allow headroom for large prompts
+const AI_TIMEOUT_MS = 30000; // 30 seconds
 
 class AiService {
   async chat(userId, message) {
-    // Use the base client's request but with a longer timeout
-    const url = `http://localhost:8080/money_tracker/api/v1/ai/chat`;
-    const headers = {
-      'Content-Type': 'application/json',
-    };
-    const token = apiClient.getToken();
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
-    }
+    const url = `/ai/chat`;
     const body = JSON.stringify({ userId, message });
 
-    let response;
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      controller.abort();
+    }, AI_TIMEOUT_MS);
+
     try {
-      response = await fetchWithTimeout(url, { method: 'POST', headers, body }, AI_TIMEOUT_MS);
-    } catch (networkError) {
-      if (networkError.name === 'AbortError') {
+      const response = await apiClient.request(url, {
+        method: 'POST',
+        body,
+        signal: controller.signal,
+      });
+      return response;
+    } catch (err) {
+      if (err.name === 'AbortError') {
         throw new Error('AI request timed out. Please try again.');
       }
-      throw new Error('Cannot connect to server. Make sure the backend is running.');
+      throw err;
+    } finally {
+      clearTimeout(timer);
     }
-
-    if (response.status === 401) {
-      apiClient.clearToken();
-      window.dispatchEvent(new CustomEvent('auth:unauthorized'));
-      throw new Error('Session expired. Please log in again.');
-    }
-
-    const text = await response.text();
-    if (!text) throw new Error('Empty response from AI.');
-
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch {
-      throw new Error('Invalid response from server.');
-    }
-
-    if (!response.ok) {
-      const errorMsg = typeof data === 'object' ? (data.message || data.error || text) : text;
-      throw new Error(errorMsg || `Request failed: ${response.status}`);
-    }
-
-    return data;
   }
 
   getRecommendations(userId) {

@@ -1,40 +1,39 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { goalService } from '../api/goalService';
 import './Goals.css';
 
 // ─── Goal Card ───
-function GoalCard({ goal, onUpdate, onDelete }) {
+function GoalCard({ goal, onDelete }) {
   const [expanded, setExpanded] = useState(false);
   const target = Number(goal.targetAmount || 0);
   const current = Number(goal.currentAmount || 0);
   const pct = target > 0 ? Math.min((current / target) * 100, 100) : 0;
   const remaining = Math.max(target - current, 0);
 
-  const statusColor = pct >= 100 ? 'var(--accent-emerald)' :
-    pct >= 75 ? 'var(--accent-cyan)' :
-    pct >= 50 ? 'var(--accent-amber)' : 'var(--accent-rose)';
+  const statusColor = pct >= 100 ? 'var(--success)' :
+    pct >= 75 ? 'var(--accent)' :
+    pct >= 50 ? '#60a5fa' : 'var(--danger)';
 
-  const statusLabel = pct >= 100 ? 'Completed' :
-    pct >= 75 ? 'Almost there' :
-    pct >= 50 ? 'In progress' : 'Getting started';
+  const statusLabel = pct >= 100 ? 'COMPLETE' :
+    pct >= 75 ? 'NEARLY' :
+    pct >= 50 ? 'IN PROGRESS' : 'STARTING';
 
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
       className="goal-card"
-      style={{ '--goal-accent': statusColor }}
     >
       <div className="goal-card-header">
         <div className="goal-info">
           <h4 className="goal-name">{goal.goalName || goal.category || 'Goal'}</h4>
-          <span className="goal-period">{goal.period || 'MONLY'}</span>
+          <span className="goal-period">{goal.period || 'MONTHLY'}</span>
         </div>
-        <span className="goal-status-badge" style={{ background: `${statusColor}20`, color: statusColor }}>
+        <span className="goal-status-badge" style={{ color: statusColor, borderColor: statusColor }}>
           {statusLabel}
         </span>
       </div>
@@ -49,14 +48,14 @@ function GoalCard({ goal, onUpdate, onDelete }) {
             className="goal-progress-fill"
             initial={{ width: 0 }}
             animate={{ width: `${pct}%` }}
-            transition={{ duration: 0.8, ease: 'easeOut' }}
+            transition={{ duration: 0.6, ease: 'linear' }}
             style={{ background: statusColor }}
           />
         </div>
         <div className="goal-meta">
-          <span className="goal-pct">{pct.toFixed(0)}% complete</span>
+          <span className="goal-pct">{pct.toFixed(0)}%</span>
           <span className="goal-remaining">
-            {pct >= 100 ? '✓ Achieved!' : `₹${remaining.toLocaleString('en-IN')} remaining`}
+            {pct >= 100 ? '✓ ACHIEVED' : `₹${remaining.toLocaleString('en-IN')} left`}
           </span>
         </div>
       </div>
@@ -66,13 +65,13 @@ function GoalCard({ goal, onUpdate, onDelete }) {
           className="goal-action-btn"
           onClick={() => setExpanded(!expanded)}
         >
-          {expanded ? 'Less' : 'More'}
+          {expanded ? 'LESS' : 'MORE'}
         </button>
         <button
           className="goal-action-btn danger"
           onClick={() => onDelete(goal.id)}
         >
-          Delete
+          DELETE
         </button>
       </div>
 
@@ -82,23 +81,23 @@ function GoalCard({ goal, onUpdate, onDelete }) {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.2 }}
             className="goal-details"
           >
             <div className="goal-detail-row">
-              <span>Category</span>
+              <span>CATEGORY</span>
               <span>{goal.category || '—'}</span>
             </div>
             <div className="goal-detail-row">
-              <span>Start Date</span>
+              <span>START</span>
               <span>{goal.startDate || '—'}</span>
             </div>
             <div className="goal-detail-row">
-              <span>Target Date</span>
+              <span>TARGET_DATE</span>
               <span>{goal.targetDate || '—'}</span>
             </div>
             <div className="goal-detail-row">
-              <span>Status</span>
+              <span>STATUS</span>
               <span style={{ color: statusColor }}>{goal.status || 'ACTIVE'}</span>
             </div>
           </motion.div>
@@ -128,25 +127,24 @@ function CreateGoalModal({ onClose, onSubmit }) {
     onSubmit({
       ...form,
       targetAmount: Number(form.targetAmount),
-      userId: '', // Will be set by parent
+      userId: '',
     });
   };
 
-  // Must match the `categories.name` values in the database (schema.sql)
   const categories = [
-    { value: 'FOOD', label: 'Food & Dining' },
-    { value: 'SHOPPING', label: 'Shopping' },
-    { value: 'WEB_SHOPPING', label: 'Online Shopping' },
-    { value: 'SUBSCRIPTION', label: 'Subscriptions' },
-    { value: 'TRANSPORT', label: 'Transport' },
-    { value: 'HEALTH', label: 'Health' },
-    { value: 'UTILITIES', label: 'Utilities' },
-    { value: 'RENT', label: 'Rent' },
-    { value: 'EDUCATION', label: 'Education' },
-    { value: 'ENTERTAINMENT', label: 'Entertainment' },
-    { value: 'INVESTMENT', label: 'Investment' },
-    { value: 'TRANSFER', label: 'Transfer' },
-    { value: 'OTHER', label: 'Other' },
+    { value: 'FOOD', label: 'FOOD & DINING' },
+    { value: 'SHOPPING', label: 'SHOPPING' },
+    { value: 'WEB_SHOPPING', label: 'ONLINE SHOPPING' },
+    { value: 'SUBSCRIPTION', label: 'SUBSCRIPTIONS' },
+    { value: 'TRANSPORT', label: 'TRANSPORT' },
+    { value: 'HEALTH', label: 'HEALTH' },
+    { value: 'UTILITIES', label: 'UTILITIES' },
+    { value: 'RENT', label: 'RENT' },
+    { value: 'EDUCATION', label: 'EDUCATION' },
+    { value: 'ENTERTAINMENT', label: 'ENTERTAINMENT' },
+    { value: 'INVESTMENT', label: 'INVESTMENT' },
+    { value: 'TRANSFER', label: 'TRANSFER' },
+    { value: 'OTHER', label: 'OTHER' },
   ];
 
   return (
@@ -158,21 +156,21 @@ function CreateGoalModal({ onClose, onSubmit }) {
       onClick={onClose}
     >
       <motion.div
-        initial={{ opacity: 0, scale: 0.9, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.9, y: 20 }}
-        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 12 }}
+        transition={{ duration: 0.2 }}
         className="modal-card"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal-header">
-          <h3>Create New Goal</h3>
+          <h3>▣ NEW GOAL</h3>
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
 
         <form onSubmit={handleSubmit} className="modal-form">
           <div className="input-group">
-            <label className="input-label">Category</label>
+            <label className="input-label">CATEGORY</label>
             <select
               name="category"
               value={form.category}
@@ -180,7 +178,7 @@ function CreateGoalModal({ onClose, onSubmit }) {
               required
               className="auth-input"
             >
-              <option value="">Select category</option>
+              <option value="">SELECT</option>
               {categories.map(c => (
                 <option key={c.value} value={c.value}>{c.label}</option>
               ))}
@@ -188,7 +186,7 @@ function CreateGoalModal({ onClose, onSubmit }) {
           </div>
 
           <div className="input-group">
-            <label className="input-label">Target Amount (₹)</label>
+            <label className="input-label">TARGET_AMOUNT (₹)</label>
             <input
               type="number"
               name="targetAmount"
@@ -202,23 +200,23 @@ function CreateGoalModal({ onClose, onSubmit }) {
           </div>
 
           <div className="input-group">
-            <label className="input-label">Period</label>
+            <label className="input-label">PERIOD</label>
             <select
               name="period"
               value={form.period}
               onChange={handleChange}
               className="auth-input"
             >
-              <option value="WEEKLY">Weekly</option>
-              <option value="MONTHLY">Monthly</option>
-              <option value="QUARTERLY">Quarterly</option>
-              <option value="YEARLY">Yearly</option>
+              <option value="WEEKLY">WEEKLY</option>
+              <option value="MONTHLY">MONTHLY</option>
+              <option value="QUARTERLY">QUARTERLY</option>
+              <option value="YEARLY">YEARLY</option>
             </select>
           </div>
 
           <div className="form-row">
             <div className="input-group">
-              <label className="input-label">Start Date</label>
+              <label className="input-label">START</label>
               <input
                 type="date"
                 name="startDate"
@@ -229,7 +227,7 @@ function CreateGoalModal({ onClose, onSubmit }) {
               />
             </div>
             <div className="input-group">
-              <label className="input-label">End Date</label>
+              <label className="input-label">END</label>
               <input
                 type="date"
                 name="endDate"
@@ -242,10 +240,10 @@ function CreateGoalModal({ onClose, onSubmit }) {
 
           <div className="modal-actions">
             <button type="button" className="btn btn-secondary" onClick={onClose}>
-              Cancel
+              CANCEL
             </button>
             <button type="submit" className="btn btn-primary">
-              Create Goal
+              CREATE
             </button>
           </div>
         </form>
@@ -260,35 +258,59 @@ export default function Goals() {
   const [goals, setGoals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
-  const [filter, setFilter] = useState('all'); // all, active, completed
+  const [filter, setFilter] = useState('all');
   const [error, setError] = useState('');
 
   const userId = user?.userId || 'dev-user';
 
-  const loadGoals = async () => {
+  const loadGoals = useCallback(async () => {
     setLoading(true);
+    setError('');
     try {
       const data = await goalService.getAll(userId);
-      setGoals(data || []);
+      // Ensure we always have an array and normalize status
+      const goalsArray = Array.isArray(data) ? data : [];
+      // Normalize: ensure each goal has a status field
+      const normalized = goalsArray.map(g => ({
+        ...g,
+        status: g.status || 'ACTIVE',
+        currentAmount: Number(g.currentAmount || 0),
+        targetAmount: Number(g.targetAmount || 0),
+      }));
+      setGoals(normalized);
     } catch (err) {
       console.error('Failed to load goals:', err);
+      setError('Failed to load goals. Please try again.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
 
+  // Load on mount and when user changes
   useEffect(() => {
-    if (user) loadGoals();
-  }, [userId, user]);
+    loadGoals();
+  }, [loadGoals]);
+
+  // Also reload when tab becomes visible
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        loadGoals();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [loadGoals]);
 
   const handleCreate = async (goalData) => {
     setError('');
     try {
       await goalService.create({ ...goalData, userId });
       setShowCreate(false);
-      loadGoals();
+      // Reload goals after creation
+      await loadGoals();
     } catch (err) {
-      setError(err.message || 'Failed to create goal. Please try again.');
+      setError(err.message || 'Failed to create goal.');
     }
   };
 
@@ -298,80 +320,83 @@ export default function Goals() {
       await goalService.delete(goalId);
       setGoals(prev => prev.filter(g => g.id !== goalId));
     } catch (err) {
-      setError(err.message || 'Failed to delete goal. Please try again.');
+      setError(err.message || 'Failed to delete goal.');
     }
   };
 
+  // Filter logic: use status field from backend as primary, progress as fallback
   const filteredGoals = goals.filter(g => {
-    if (filter === 'active') return g.status === 'ACTIVE' || Number(g.currentAmount) < Number(g.targetAmount);
-    if (filter === 'completed') return Number(g.currentAmount) >= Number(g.targetAmount);
+    const isComplete = g.status === 'COMPLETED' || g.status === 'COMPLETE' ||
+      Number(g.currentAmount) >= Number(g.targetAmount);
+    const isActive = g.status === 'ACTIVE' || g.status === 'IN_PROGRESS' ||
+      Number(g.currentAmount) < Number(g.targetAmount);
+
+    if (filter === 'active') return isActive;
+    if (filter === 'completed') return isComplete;
     return true;
   });
 
   const totalTarget = goals.reduce((s, g) => s + Number(g.targetAmount || 0), 0);
   const totalSaved = goals.reduce((s, g) => s + Number(g.currentAmount || 0), 0);
-  const completedCount = goals.filter(g => Number(g.currentAmount) >= Number(g.targetAmount)).length;
+  const completedCount = goals.filter(g =>
+    g.status === 'COMPLETED' || g.status === 'COMPLETE' ||
+    Number(g.currentAmount) >= Number(g.targetAmount)
+  ).length;
 
   return (
     <div className="page-container goals-page">
       {/* Header */}
       <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
         className="page-header"
       >
         <div>
-          <h1 className="page-title">
-            <span className="gradient-text">Goals</span>
-          </h1>
-          <p className="page-subtitle">
-            Track your spending limits and savings targets
-          </p>
+          <h1 className="page-title">▣ GOALS</h1>
+          <p className="page-subtitle">Spending limits and savings targets</p>
         </div>
-        <motion.button
+        <button
           className="btn btn-primary"
           onClick={() => setShowCreate(true)}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
         >
-          + New Goal
-        </motion.button>
+          + NEW GOAL
+        </button>
       </motion.div>
 
       {/* Error */}
       {error && (
         <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
           className="auth-error"
-          style={{ marginBottom: 'var(--space-lg)' }}
+          style={{ marginBottom: 'var(--sp-6)' }}
         >
-          <span>⚠</span> {error}
+          <span>!</span> {error}
         </motion.div>
       )}
 
       {/* Stats */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.05 }}
         className="goals-stats"
       >
         <div className="goal-stat-card">
           <span className="goal-stat-value">{goals.length}</span>
-          <span className="goal-stat-label">Total Goals</span>
+          <span className="goal-stat-label">TOTAL</span>
         </div>
         <div className="goal-stat-card">
           <span className="goal-stat-value">{completedCount}</span>
-          <span className="goal-stat-label">Completed</span>
+          <span className="goal-stat-label">COMPLETE</span>
         </div>
         <div className="goal-stat-card">
           <span className="goal-stat-value">₹{totalSaved.toLocaleString('en-IN')}</span>
-          <span className="goal-stat-label">Total Saved</span>
+          <span className="goal-stat-label">SAVED</span>
         </div>
         <div className="goal-stat-card">
           <span className="goal-stat-value">₹{totalTarget.toLocaleString('en-IN')}</span>
-          <span className="goal-stat-label">Total Target</span>
+          <span className="goal-stat-label">TARGET</span>
         </div>
       </motion.div>
 
@@ -379,7 +404,7 @@ export default function Goals() {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.15 }}
+        transition={{ delay: 0.1 }}
         className="goals-filter"
       >
         {['all', 'active', 'completed'].map(f => (
@@ -388,7 +413,7 @@ export default function Goals() {
             className={`filter-btn ${filter === f ? 'active' : ''}`}
             onClick={() => setFilter(f)}
           >
-            {f.charAt(0).toUpperCase() + f.slice(1)}
+            {f.toUpperCase()}
           </button>
         ))}
       </motion.div>
@@ -407,11 +432,13 @@ export default function Goals() {
             animate={{ opacity: 1 }}
             className="goals-empty"
           >
-            <span className="empty-icon">◎</span>
-            <h3>No goals yet</h3>
-            <p>Create your first spending goal to start tracking your progress.</p>
+            <span className="empty-icon">▣</span>
+            <h3>{filter === 'all' ? 'NO GOALS' : `NO ${filter.toUpperCase()} GOALS`}</h3>
+            <p>{filter === 'all'
+              ? 'Create a spending goal to start tracking.'
+              : `No ${filter} goals found.`}</p>
             <button className="btn btn-primary" onClick={() => setShowCreate(true)}>
-              Create Goal
+              + NEW GOAL
             </button>
           </motion.div>
         ) : (
