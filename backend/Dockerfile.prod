@@ -14,7 +14,7 @@ COPY src src
 RUN chmod +x mvnw
 
 # Build the application (skip tests for faster build)
-RUN ./mvnw clean package -B
+RUN ./mvnw clean package -DskipTests -B
 
 # Runtime stage
 FROM eclipse-temurin:21-jre-alpine
