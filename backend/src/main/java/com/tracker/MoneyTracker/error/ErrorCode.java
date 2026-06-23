@@ -37,6 +37,9 @@ public enum ErrorCode {
     // --- 409 Conflict ---
     USER_ALREADY_EXISTS(HttpStatus.CONFLICT, "Conflict", "User already exists: {0}"),
 
+    // --- 502 Bad Gateway ---
+    LLM_ERROR(HttpStatus.BAD_GATEWAY, "Bad Gateway", "AI service unavailable"),
+
     // --- 500 Internal Server Error ---
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", "An unexpected error occurred");
 

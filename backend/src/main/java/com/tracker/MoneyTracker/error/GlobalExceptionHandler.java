@@ -1,7 +1,10 @@
 package com.tracker.MoneyTracker.error;
 
+import com.tracker.MoneyTracker.ai.client.GroqClient;
 import com.tracker.MoneyTracker.exception.*;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -17,6 +20,7 @@ import java.time.LocalDateTime;
  * Global exception handler that catches all exceptions thrown by controllers
  * and returns a standardized {@link ErrorResponse} body.
  */
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -98,6 +102,15 @@ public class GlobalExceptionHandler {
         return buildResponse(ErrorCode.INVALID_INPUT, ex.getMessage(), request, HttpStatus.BAD_REQUEST);
     }
 
+    // --- LLM integration errors ---
+
+    @ExceptionHandler(GroqClient.GroqException.class)
+    public ResponseEntity<ErrorResponse> handleGroqException(
+            GroqClient.GroqException ex, HttpServletRequest request) {
+        log.error("LLM call failed: {}", ex.getMessage());
+        return buildResponse(ErrorCode.LLM_ERROR, request);
+    }
+
     // --- Catch-all for any unhandled exception ---
 
     @ExceptionHandler(Exception.class)
@@ -119,8 +132,7 @@ public class GlobalExceptionHandler {
                 code.getError(),
                 message,
                 LocalDateTime.now(),
-                request.getRequestURI()
-        );
+                request.getRequestURI());
         return ResponseEntity.status(status).body(body);
     }
 }

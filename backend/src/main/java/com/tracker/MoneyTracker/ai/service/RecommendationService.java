@@ -1,6 +1,6 @@
 package com.tracker.MoneyTracker.ai.service;
 
-import com.tracker.MoneyTracker.ai.client.OllamaClient;
+import com.tracker.MoneyTracker.ai.client.AiLlmClient;
 import com.tracker.MoneyTracker.ai.dto.RecommendationResponse;
 import com.tracker.MoneyTracker.analytics.AnalyticsService;
 import com.tracker.MoneyTracker.analytics.dto.CategoryBreakdown;
@@ -29,14 +29,14 @@ public class RecommendationService {
 
     private static final Logger log = LoggerFactory.getLogger(RecommendationService.class);
 
-    private final OllamaClient ollamaClient;
+    private final AiLlmClient llmClient;
     private final AnalyticsService analyticsService;
     private final Executor aiExecutor;
 
-    public RecommendationService(OllamaClient ollamaClient,
+    public RecommendationService(AiLlmClient llmClient,
                                  AnalyticsService analyticsService,
                                  @Qualifier("aiExecutor") Executor aiExecutor) {
-        this.ollamaClient = ollamaClient;
+        this.llmClient = llmClient;
         this.analyticsService = analyticsService;
         this.aiExecutor = aiExecutor;
     }
@@ -49,7 +49,7 @@ public class RecommendationService {
      */
     public RecommendationResponse generateRecommendations(String userId) {
         String prompt = buildRecommendationPrompt(userId);
-        String aiResponse = ollamaClient.generate(prompt);
+        String aiResponse = llmClient.generate(prompt);
 
         // Split the AI response into individual recommendations
         List<String> recommendations = parseRecommendations(aiResponse);

@@ -1,22 +1,33 @@
 spring:
   datasource:
-    url: jdbc:postgresql://postgres:xFVpKXwvUmCuepiZgmklihKXxGkeAGYI@postgres.railway.internal:5432/railway
-    username: postgres
-    password: xFVpKXwvUmCuepiZgmklihKXxGkeAGYI
+    url: ${DATABASE_URL}
+    username: ${PGUSER}
+    password: ${PGPASSWORD}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: false
+  output:
+    ansi:
+      enabled: never
 
-# Ollama runs natively on Windows (GPU-accelerated), not in Docker.
-# host.docker.internal resolves to the host machine from inside a container.
-ollama:
-  base-url: http://host.docker.internal:11434
-  model: llama3.2
+server:
+  servlet:
+    context-path: /money_tracker
+
+# AI provider: OpenRouter (free tier) on Railway
+ai:
+  provider: xai
+
+# OpenRouter — key injected from Railway environment variable
+groq:
+  api-key: ${OPENROUTER_API_KEY}
+  base-url: https://openrouter.ai/api/v1
+  model: openai/gpt-oss-120b:free
   temperature: 0.7
   max-tokens: 512
 
-# CORS: allow the frontend origin
+# CORS: allow the frontend origin (Railway frontend domain)
 cors:
-  allowed-origins: http://localhost,http://localhost:80,http://localhost:5173
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost,http://localhost:80,http://localhost:5173}

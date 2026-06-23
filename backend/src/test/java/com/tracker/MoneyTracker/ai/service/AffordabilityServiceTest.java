@@ -1,6 +1,6 @@
 package com.tracker.MoneyTracker.ai.service;
 
-import com.tracker.MoneyTracker.ai.client.OllamaClient;
+import com.tracker.MoneyTracker.ai.client.AiLlmClient;
 import com.tracker.MoneyTracker.ai.dto.AffordabilityResponse;
 import com.tracker.MoneyTracker.analytics.AnalyticsService;
 import com.tracker.MoneyTracker.analytics.dto.SpendingSummary;
@@ -22,7 +22,7 @@ import static org.mockito.Mockito.*;
 class AffordabilityServiceTest {
 
     @Mock
-    private OllamaClient ollamaClient;
+    private AiLlmClient ollamaClient;
 
     @Mock
     private AnalyticsService analyticsService;

@@ -27,6 +27,5 @@ COPY --from=build /app/target/*.jar app.jar
 
 # Expose the backend port
 EXPOSE 8080
-
 # Run the application with prod profile
-ENTRYPOINT ["java", "-jar", "app.jar", "--spring.profiles.active=prod"]
+ENTRYPOINT ["java", "-jar", "app.jar", "--spring.profiles.active=dev"]

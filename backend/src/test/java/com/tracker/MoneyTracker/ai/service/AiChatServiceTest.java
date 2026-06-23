@@ -1,6 +1,6 @@
 package com.tracker.MoneyTracker.ai.service;
 
-import com.tracker.MoneyTracker.ai.client.OllamaClient;
+import com.tracker.MoneyTracker.ai.client.AiLlmClient;
 import com.tracker.MoneyTracker.ai.dto.ChatResponse;
 import com.tracker.MoneyTracker.ai.entity.AiChatMessage;
 import com.tracker.MoneyTracker.ai.repository.AiChatMessageRepository;
@@ -28,7 +28,7 @@ import static org.mockito.Mockito.*;
 class AiChatServiceTest {
 
     @Mock
-    private OllamaClient ollamaClient;
+    private AiLlmClient ollamaClient;
 
     @Mock
     private AiChatMessageRepository chatRepository;
@@ -127,15 +127,15 @@ class AiChatServiceTest {
         }
 
         @Test
-        @DisplayName("Should throw OllamaException when Ollama is unavailable")
-        void shouldThrowOllamaException_WhenOllamaUnavailable() {
+        @DisplayName("Should throw RuntimeException when LLM is unavailable")
+        void shouldThrowRuntimeException_WhenLlmUnavailable() {
             // Arrange
             when(ollamaClient.generate(anyString()))
-                    .thenThrow(new OllamaClient.OllamaException("Connection refused"));
+                    .thenThrow(new RuntimeException("Connection refused"));
 
             // Act & Assert
             assertThatThrownBy(() -> sut.chat("user-123", "Hello"))
-                    .isInstanceOf(OllamaClient.OllamaException.class)
+                    .isInstanceOf(RuntimeException.class)
                     .hasMessageContaining("Connection refused");
         }
     }
