@@ -211,13 +211,13 @@ class AiCoachControllerTest {
                     .thenReturn(List.of(msg1, msg2));
 
             // Act
-            ResponseEntity<List<AiChatMessage>> response = sut.getChatHistory("user-123");
+            ResponseEntity<List<ChatHistoryItem>> response = sut.getChatHistory("user-123");
 
             // Assert
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody()).hasSize(2);
-            assertThat(response.getBody().get(0).getRole()).isEqualTo("USER");
-            assertThat(response.getBody().get(1).getRole()).isEqualTo("ASSISTANT");
+            assertThat(response.getBody().get(0).role()).isEqualTo("USER");
+            assertThat(response.getBody().get(1).role()).isEqualTo("ASSISTANT");
         }
 
         @Test
@@ -226,7 +226,7 @@ class AiCoachControllerTest {
             when(chatMessageRepository.findByUserIdOrderByCreatedAtAsc("user-123"))
                     .thenReturn(List.of());
 
-            ResponseEntity<List<AiChatMessage>> response = sut.getChatHistory("user-123");
+            ResponseEntity<List<ChatHistoryItem>> response = sut.getChatHistory("user-123");
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(response.getBody()).isEmpty();

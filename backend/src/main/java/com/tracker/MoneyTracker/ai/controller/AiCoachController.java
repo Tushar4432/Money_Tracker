@@ -1,7 +1,6 @@
 package com.tracker.MoneyTracker.ai.controller;
 
 import com.tracker.MoneyTracker.ai.dto.*;
-import com.tracker.MoneyTracker.ai.entity.AiChatMessage;
 import com.tracker.MoneyTracker.ai.repository.AiChatMessageRepository;
 import com.tracker.MoneyTracker.ai.service.AffordabilityService;
 import com.tracker.MoneyTracker.ai.service.AiChatService;
@@ -108,13 +107,17 @@ public class AiCoachController {
 
     /**
      * Get chat history for a user, oldest first.
+     * Returns DTOs — never the JPA entity directly.
      */
     @GetMapping("/history")
-    public ResponseEntity<List<AiChatMessage>> getChatHistory(@RequestParam("userId") String userId) {
+    public ResponseEntity<List<ChatHistoryItem>> getChatHistory(@RequestParam("userId") String userId) {
         if (userId == null || userId.isBlank()) {
             throw new BadRequestException(ErrorCode.INVALID_INPUT, "userId is required");
         }
-        List<AiChatMessage> messages = chatMessageRepository.findByUserIdOrderByCreatedAtAsc(userId);
+        List<ChatHistoryItem> messages = chatMessageRepository.findByUserIdOrderByCreatedAtAsc(userId)
+                .stream()
+                .map(m -> new ChatHistoryItem(m.getRole(), m.getContent(), m.getCreatedAt()))
+                .toList();
         return ResponseEntity.ok(messages);
     }
 }

@@ -48,11 +48,15 @@ services:
       start_period: 90s
 
   # ── Frontend (React + Nginx) ──
+  # Dev only — Railway deployment uses Dockerfile.prod + nginx runtime proxy.
+  # BACKEND_URL is injected at container start via envsubst in Dockerfile.prod.
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: money_tracker_frontend
+    environment:
+      BACKEND_URL: http://backend:8080
     depends_on:
       backend:
         condition: service_healthy
