@@ -1,7 +1,7 @@
 // Base API client with JWT auth support + persistent token storage
-const BASE_URL = import.meta.env.PROD
-  ? '/money_tracker/api/v1'
-  : 'http://localhost:8080/money_tracker/api/v1';
+// In production the SPA calls the same origin; nginx proxies /money_tracker/api to the backend.
+// In local dev (Docker Compose) nginx also proxies — see frontend/nginx.conf.
+const BASE_URL = '/money_tracker/api/v1';
 const TOKEN_KEY = 'mt_jwt_token';
 
 class ApiClient {

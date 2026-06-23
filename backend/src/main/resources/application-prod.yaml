@@ -31,3 +31,6 @@ groq:
 # CORS: allow the frontend origin (Railway frontend domain)
 cors:
   allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost,http://localhost:80,http://localhost:5173}
+  allowed-origin-patterns: "*"
+server:
+  forward-headers-strategy: native
