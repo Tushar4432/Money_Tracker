@@ -6,7 +6,6 @@ import okhttp3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -22,9 +21,11 @@ import java.util.concurrent.TimeUnit;
  * <p>
  * The client is intentionally simple — no retry logic, no streaming — to
  * keep the MVP straightforward and easy to test.
+ * <p>
+ * Not a {@code @Component} — instantiated by {@code AiLlmConfig} so that
+ * only the selected implementation is exposed as an {@code AiLlmClient} bean.
  */
-@Component
-public class OllamaClient {
+public class OllamaClient implements AiLlmClient {
 
     private static final Logger log = LoggerFactory.getLogger(OllamaClient.class);
     private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
@@ -42,11 +43,23 @@ public class OllamaClient {
     @Value("${ollama.model:llama3.2}")
     private String model = "llama3.2";
 
+    public void setModel(String model) {
+        this.model = model;
+    }
+
     @Value("${ollama.temperature:0.7}")
     private double temperature = 0.7;
 
+    public void setTemperature(double temperature) {
+        this.temperature = temperature;
+    }
+
     @Value("${ollama.max-tokens:2048}")
     private int maxTokens = 2048;
+
+    public void setMaxTokens(int maxTokens) {
+        this.maxTokens = maxTokens;
+    }
 
     public OllamaClient() {
         this.httpClient = new OkHttpClient.Builder()
@@ -64,8 +77,10 @@ public class OllamaClient {
      * @return the LLM's text response
      * @throws OllamaException if the request fails or Ollama returns an error
      */
+    @Override
     public String generate(String prompt) {
-        log.debug("Sending prompt to Ollama (model={}): {}", model, prompt.substring(0, Math.min(100, prompt.length())));
+        log.debug("Sending prompt to Ollama (model={}): {}", model,
+                prompt.substring(0, Math.min(100, prompt.length())));
 
         Map<String, Object> options = new HashMap<>();
         options.put("temperature", temperature);

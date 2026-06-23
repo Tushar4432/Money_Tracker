@@ -1,6 +1,6 @@
 package com.tracker.MoneyTracker.ai.service;
 
-import com.tracker.MoneyTracker.ai.client.OllamaClient;
+import com.tracker.MoneyTracker.ai.client.AiLlmClient;
 import com.tracker.MoneyTracker.ai.dto.AffordabilityResponse;
 import com.tracker.MoneyTracker.analytics.AnalyticsService;
 import com.tracker.MoneyTracker.analytics.dto.SpendingSummary;
@@ -33,16 +33,16 @@ public class AffordabilityService {
     /** Percentage of monthly income above which a purchase is considered expensive. */
     private static final double EXPENSE_THRESHOLD_PERCENT = 10.0;
 
-    private final OllamaClient ollamaClient;
+    private final AiLlmClient llmClient;
     private final AnalyticsService analyticsService;
     private final GoalService goalService;
     private final Executor aiExecutor;
 
-    public AffordabilityService(OllamaClient ollamaClient,
+    public AffordabilityService(AiLlmClient llmClient,
                                AnalyticsService analyticsService,
                                GoalService goalService,
                                @Qualifier("aiExecutor") Executor aiExecutor) {
-        this.ollamaClient = ollamaClient;
+        this.llmClient = llmClient;
         this.analyticsService = analyticsService;
         this.goalService = goalService;
         this.aiExecutor = aiExecutor;
@@ -78,7 +78,7 @@ public class AffordabilityService {
 
         // Build context for LLM
         String prompt = buildAffordabilityPrompt(itemName, cost, summary, goals);
-        String analysis = ollamaClient.generate(prompt);
+        String analysis = llmClient.generate(prompt);
 
         return new AffordabilityResponse(userId, itemName, cost, affordable, analysis);
     }

@@ -1,6 +1,6 @@
 package com.tracker.MoneyTracker.ai.service;
 
-import com.tracker.MoneyTracker.ai.client.OllamaClient;
+import com.tracker.MoneyTracker.ai.client.AiLlmClient;
 import com.tracker.MoneyTracker.ai.dto.ChatResponse;
 import com.tracker.MoneyTracker.ai.entity.AiChatMessage;
 import com.tracker.MoneyTracker.ai.repository.AiChatMessageRepository;
@@ -33,18 +33,18 @@ public class AiChatService {
     private static final Logger log = LoggerFactory.getLogger(AiChatService.class);
     private static final int MAX_CONTEXT_MESSAGES = 10;
 
-    private final OllamaClient ollamaClient;
+    private final AiLlmClient llmClient;
     private final AiChatMessageRepository chatRepository;
     private final AnalyticsService analyticsService;
     private final GoalService goalService;
     private final Executor aiExecutor;
 
-    public AiChatService(OllamaClient ollamaClient,
+    public AiChatService(AiLlmClient llmClient,
                          AiChatMessageRepository chatRepository,
                          AnalyticsService analyticsService,
                          GoalService goalService,
                          @Qualifier("aiExecutor") Executor aiExecutor) {
-        this.ollamaClient = ollamaClient;
+        this.llmClient = llmClient;
         this.chatRepository = chatRepository;
         this.analyticsService = analyticsService;
         this.goalService = goalService;
@@ -87,8 +87,8 @@ public class AiChatService {
         // Combine system prompt with wrapped user message
         String fullPrompt = systemPrompt + "\n\n" + wrappedMessage + "\nAssistant:";
 
-        // Call Ollama
-        String reply = ollamaClient.generate(fullPrompt);
+        // Call LLM (provider selected by AiLlmConfig: Ollama / Groq / x.ai / OpenRouter)
+        String reply = llmClient.generate(fullPrompt);
         log.info("AI response for user {}: {}", userId, reply.substring(0, Math.min(100, reply.length())));
 
         // Persist user message

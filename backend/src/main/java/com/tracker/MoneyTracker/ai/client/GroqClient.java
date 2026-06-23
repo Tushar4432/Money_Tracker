@@ -6,7 +6,6 @@ import okhttp3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -17,22 +16,21 @@ import java.util.concurrent.TimeUnit;
 /**
  * HTTP client for communicating with OpenAI-compatible LLM APIs.
  * <p>
- * Works with both <strong>Groq Cloud</strong> and <strong>x.ai (Grok)</strong>
- * since they both expose the OpenAI chat completions protocol.
+ * Works with Groq Cloud, x.ai (Grok), OpenRouter, and any service exposing
+ * the OpenAI chat completions protocol.
  * <p>
  * Configuration properties:
  * <ul>
  *   <li>{@code groq.api-key} — API key</li>
- *   <li>{@code groq.base-url} — API base URL (e.g. {@code https://api.groq.com} or {@code https://api.x.ai/v1})</li>
+ *   <li>{@code groq.base-url} — API base URL</li>
  *   <li>{@code groq.model} — Model ID</li>
  *   <li>{@code groq.temperature} — Sampling temperature, defaults to {@code 0.7}</li>
  *   <li>{@code groq.max-tokens} — Max tokens in response, defaults to {@code 1024}</li>
  * </ul>
  * <p>
- * Groq:  {@code baseUrl=https://api.groq.com, model=llama-3.3-70b-versatile}
- * x.ai:  {@code baseUrl=https://api.x.ai/v1,   model=grok-4.3}
+ * Not a {@code @Component} — instantiated by {@code AiLlmConfig} so that
+ * only the selected implementation is exposed as an {@code AiLlmClient} bean.
  */
-@Component
 public class GroqClient implements AiLlmClient {
 
     private static final Logger log = LoggerFactory.getLogger(GroqClient.class);
@@ -54,11 +52,27 @@ public class GroqClient implements AiLlmClient {
     @Value("${groq.model:llama-3.3-70b-versatile}")
     private String model = "llama-3.3-70b-versatile";
 
+    public void setModel(String model) {
+        this.model = model;
+    }
+
     @Value("${groq.temperature:0.7}")
     private double temperature = 0.7;
 
+    public void setTemperature(double temperature) {
+        this.temperature = temperature;
+    }
+
     @Value("${groq.max-tokens:1024}")
     private int maxTokens = 1024;
+
+    public void setMaxTokens(int maxTokens) {
+        this.maxTokens = maxTokens;
+    }
+
+    public void setApiKey(String apiKey) {
+        this.apiKey = apiKey;
+    }
 
     public GroqClient() {
         this.httpClient = new OkHttpClient.Builder()
