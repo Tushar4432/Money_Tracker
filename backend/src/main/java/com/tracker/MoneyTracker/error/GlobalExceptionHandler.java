@@ -1,6 +1,6 @@
 package com.tracker.MoneyTracker.error;
 
-import com.tracker.MoneyTracker.ai.client.GroqClient;
+import com.tracker.MoneyTracker.ai.client.OpenRouterClient;
 import com.tracker.MoneyTracker.exception.*;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -104,9 +104,9 @@ public class GlobalExceptionHandler {
 
     // --- LLM integration errors ---
 
-    @ExceptionHandler(GroqClient.GroqException.class)
-    public ResponseEntity<ErrorResponse> handleGroqException(
-            GroqClient.GroqException ex, HttpServletRequest request) {
+    @ExceptionHandler(OpenRouterClient.OpenRouterException.class)
+    public ResponseEntity<ErrorResponse> handleOpenRouterException(
+            OpenRouterClient.OpenRouterException ex, HttpServletRequest request) {
         log.error("LLM call failed: {}", ex.getMessage());
         return buildResponse(ErrorCode.LLM_ERROR, request);
     }

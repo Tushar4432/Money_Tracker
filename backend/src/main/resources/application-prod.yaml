@@ -14,10 +14,10 @@ spring:
 
 # AI provider: OpenRouter (free tier) on Railway
 ai:
-  provider: xai
+  provider: openrouter
 
 # OpenRouter — key injected from Railway environment variable
-groq:
+openrouter:
   api-key: ${OPENROUTER_API_KEY}
   base-url: https://openrouter.ai/api/v1
   model: openai/gpt-oss-120b:free

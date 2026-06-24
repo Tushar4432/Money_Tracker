@@ -1,7 +1,7 @@
 package com.tracker.MoneyTracker.ai.config;
 
 import com.tracker.MoneyTracker.ai.client.AiLlmClient;
-import com.tracker.MoneyTracker.ai.client.GroqClient;
+import com.tracker.MoneyTracker.ai.client.OpenRouterClient;
 import com.tracker.MoneyTracker.ai.client.OllamaClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,41 +43,31 @@ public class AiLlmConfig {
     @Value("${ollama.max-tokens:2048}")
     private int ollamaMaxTokens;
 
-    @Value("${groq.api-key:}")
-    private String groqApiKey;
+    @Value("${openrouter.api-key:}")
+    private String openRouterApiKey;
 
-    @Value("${groq.base-url:https://api.groq.com}")
-    private String groqBaseUrl;
+    @Value("${openrouter.base-url:https://openrouter.ai/api/v1}")
+    private String openRouterBaseUrl;
 
-    @Value("${groq.model:llama-3.3-70b-versatile}")
-    private String groqModel;
+    @Value("${openrouter.model:llama-3.3-70b-versatile}")
+    private String openRouterModel;
 
-    @Value("${groq.temperature:0.7}")
-    private double groqTemperature;
+    @Value("${openrouter.temperature:0.7}")
+    private double openRouterTemperature;
 
-    @Value("${groq.max-tokens:1024}")
-    private int groqMaxTokens;
+    @Value("${openrouter.max-tokens:1024}")
+    private int openRouterMaxTokens;
 
     @Bean
     public AiLlmClient aiLlmClient() {
-        if ("groq".equalsIgnoreCase(provider)) {
-            log.info("AI provider: Groq (model={})", groqModel);
-            GroqClient client = new GroqClient();
-            client.setApiKey(groqApiKey);
-            client.setBaseUrl(groqBaseUrl);
-            client.setModel(groqModel);
-            client.setTemperature(groqTemperature);
-            client.setMaxTokens(groqMaxTokens);
-            return client;
-        }
-        if ("xai".equalsIgnoreCase(provider)) {
-            log.info("AI provider: x.ai / OpenRouter (model={}, url={})", groqModel, groqBaseUrl);
-            GroqClient client = new GroqClient();
-            client.setApiKey(groqApiKey);
-            client.setBaseUrl(groqBaseUrl);
-            client.setModel(groqModel);
-            client.setTemperature(groqTemperature);
-            client.setMaxTokens(groqMaxTokens);
+        if ("openrouter".equalsIgnoreCase(provider) || "groq".equalsIgnoreCase(provider) || "xai".equalsIgnoreCase(provider)) {
+            log.info("AI provider: OpenRouter (model={}, url={})", openRouterModel, openRouterBaseUrl);
+            OpenRouterClient client = new OpenRouterClient();
+            client.setApiKey(openRouterApiKey);
+            client.setBaseUrl(openRouterBaseUrl);
+            client.setModel(openRouterModel);
+            client.setTemperature(openRouterTemperature);
+            client.setMaxTokens(openRouterMaxTokens);
             return client;
         }
         log.info("AI provider: Ollama (model={})", ollamaModel);

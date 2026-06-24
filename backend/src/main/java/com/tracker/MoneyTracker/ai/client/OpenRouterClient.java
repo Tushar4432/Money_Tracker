@@ -14,56 +14,50 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
- * HTTP client for communicating with OpenAI-compatible LLM APIs.
- * <p>
- * Works with Groq Cloud, x.ai (Grok), OpenRouter, and any service exposing
- * the OpenAI chat completions protocol.
+ * HTTP client for communicating with OpenAI-compatible LLM APIs, specifically OpenRouter.
  * <p>
  * Configuration properties:
  * <ul>
- *   <li>{@code groq.api-key} — API key</li>
- *   <li>{@code groq.base-url} — API base URL</li>
- *   <li>{@code groq.model} — Model ID</li>
- *   <li>{@code groq.temperature} — Sampling temperature, defaults to {@code 0.7}</li>
- *   <li>{@code groq.max-tokens} — Max tokens in response, defaults to {@code 1024}</li>
+ *   <li>{@code openrouter.api-key} — API key</li>
+ *   <li>{@code openrouter.base-url} — API base URL, defaults to {@code https://openrouter.ai/api/v1}</li>
+ *   <li>{@code openrouter.model} — Model ID</li>
+ *   <li>{@code openrouter.temperature} — Sampling temperature, defaults to {@code 0.7}</li>
+ *   <li>{@code openrouter.max-tokens} — Max tokens in response, defaults to {@code 1024}</li>
  * </ul>
- * <p>
- * Not a {@code @Component} — instantiated by {@code AiLlmConfig} so that
- * only the selected implementation is exposed as an {@code AiLlmClient} bean.
  */
-public class GroqClient implements AiLlmClient {
+public class OpenRouterClient implements AiLlmClient {
 
-    private static final Logger log = LoggerFactory.getLogger(GroqClient.class);
+    private static final Logger log = LoggerFactory.getLogger(OpenRouterClient.class);
     private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
     private final OkHttpClient httpClient;
     private final ObjectMapper objectMapper;
 
-    @Value("${groq.api-key:}")
+    @Value("${openrouter.api-key:}")
     private String apiKey;
 
-    @Value("${groq.base-url:https://api.groq.com}")
-    private String baseUrl = "https://api.groq.com";
+    @Value("${openrouter.base-url:https://openrouter.ai/api/v1}")
+    private String baseUrl = "https://openrouter.ai/api/v1";
 
     public void setBaseUrl(String baseUrl) {
         this.baseUrl = baseUrl;
     }
 
-    @Value("${groq.model:llama-3.3-70b-versatile}")
+    @Value("${openrouter.model:llama-3.3-70b-versatile}")
     private String model = "llama-3.3-70b-versatile";
 
     public void setModel(String model) {
         this.model = model;
     }
 
-    @Value("${groq.temperature:0.7}")
+    @Value("${openrouter.temperature:0.7}")
     private double temperature = 0.7;
 
     public void setTemperature(double temperature) {
         this.temperature = temperature;
     }
 
-    @Value("${groq.max-tokens:1024}")
+    @Value("${openrouter.max-tokens:1024}")
     private int maxTokens = 1024;
 
     public void setMaxTokens(int maxTokens) {
@@ -74,7 +68,7 @@ public class GroqClient implements AiLlmClient {
         this.apiKey = apiKey;
     }
 
-    public GroqClient() {
+    public OpenRouterClient() {
         this.httpClient = new OkHttpClient.Builder()
                 .connectTimeout(15, TimeUnit.SECONDS)
                 .readTimeout(120, TimeUnit.SECONDS)
@@ -88,7 +82,7 @@ public class GroqClient implements AiLlmClient {
      *
      * @param prompt the full prompt to send
      * @return the LLM's text response
-     * @throws GroqException if the request fails or the API returns an error
+     * @throws OpenRouterException if the request fails or the API returns an error
      */
     @Override
     public String generate(String prompt) {
@@ -110,33 +104,49 @@ public class GroqClient implements AiLlmClient {
         try {
             json = objectMapper.writeValueAsString(requestBody);
         } catch (Exception e) {
-            throw new GroqException("Failed to serialize request", e);
+            throw new OpenRouterException("Failed to serialize request", e);
         }
 
-        // Determine the chat completions path based on the base URL
-        // Groq uses /openai/v1/chat/completions, x.ai uses /chat/completions
-        String completionsPath = baseUrl.contains("api.x.ai")
-                ? "/chat/completions"
-                : "/openai/v1/chat/completions";
+        // Determine the chat completions path based on the base URL.
+        // Strip trailing slash if present.
+        String cleanBaseUrl = baseUrl;
+        if (cleanBaseUrl.endsWith("/")) {
+            cleanBaseUrl = cleanBaseUrl.substring(0, cleanBaseUrl.length() - 1);
+        }
 
-        Request request = new Request.Builder()
-                .url(baseUrl + completionsPath)
+        String completionsPath;
+        if (cleanBaseUrl.contains("api.x.ai") || cleanBaseUrl.contains("openrouter.ai") || cleanBaseUrl.endsWith("/v1")) {
+            completionsPath = "/chat/completions";
+        } else {
+            completionsPath = "/openai/v1/chat/completions";
+        }
+        String fullUrl = cleanBaseUrl + completionsPath;
+
+        Request.Builder requestBuilder = new Request.Builder()
+                .url(fullUrl)
                 .post(RequestBody.create(json, JSON))
-                .addHeader("Authorization", "Bearer " + apiKey)
-                .build();
+                .addHeader("Authorization", "Bearer " + apiKey);
+
+        // OpenRouter recommended headers for analytics and metadata
+        if (cleanBaseUrl.contains("openrouter.ai")) {
+            requestBuilder.addHeader("HTTP-Referer", "https://github.com/Tushar4432/Money_Tracker");
+            requestBuilder.addHeader("X-Title", "Money Tracker");
+        }
+
+        Request request = requestBuilder.build();
 
         try (Response response = httpClient.newCall(request).execute()) {
             if (!response.isSuccessful()) {
                 String body = response.body() != null ? response.body().string() : "empty";
                 log.error("LLM returned HTTP {}: {}", response.code(), body);
-                throw new GroqException("LLM returned HTTP " + response.code() + ": " + body);
+                throw new OpenRouterException("LLM returned HTTP " + response.code() + ": " + body);
             }
 
             String responseBody = response.body() != null ? response.body().string() : "";
             JsonNode root = objectMapper.readTree(responseBody);
 
             if (root.has("error")) {
-                throw new GroqException("LLM error: " + root.get("error").asText());
+                throw new OpenRouterException("LLM error: " + root.get("error").asText());
             }
 
             // Extract text from OpenAI-style response: choices[0].message.content
@@ -147,22 +157,22 @@ public class GroqClient implements AiLlmClient {
                 return text;
             }
 
-            throw new GroqException("LLM returned no choices in response: " + responseBody);
+            throw new OpenRouterException("LLM returned no choices in response: " + responseBody);
         } catch (IOException e) {
             log.error("Failed to communicate with LLM at {}", baseUrl, e);
-            throw new GroqException("Failed to connect to LLM at " + baseUrl, e);
+            throw new OpenRouterException("Failed to connect to LLM at " + baseUrl, e);
         }
     }
 
     /**
      * Exception thrown when LLM communication fails.
      */
-    public static class GroqException extends RuntimeException {
-        public GroqException(String message) {
+    public static class OpenRouterException extends RuntimeException {
+        public OpenRouterException(String message) {
             super(message);
         }
 
-        public GroqException(String message, Throwable cause) {
+        public OpenRouterException(String message, Throwable cause) {
             super(message, cause);
         }
     }
