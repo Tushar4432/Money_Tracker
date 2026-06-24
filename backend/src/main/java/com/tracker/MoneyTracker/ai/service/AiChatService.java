@@ -87,7 +87,7 @@ public class AiChatService {
         // Combine system prompt with wrapped user message
         String fullPrompt = systemPrompt + "\n\n" + wrappedMessage + "\nAssistant:";
 
-        // Call LLM (provider selected by AiLlmConfig: Ollama / Groq / x.ai / OpenRouter)
+        // Call LLM (provider selected by AiLlmConfig: Ollama / OpenRouter)
         String reply = llmClient.generate(fullPrompt);
         log.info("AI response for user {}: {}", userId, reply.substring(0, Math.min(100, reply.length())));
 
