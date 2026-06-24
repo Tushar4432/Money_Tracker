@@ -12,10 +12,6 @@ spring:
     ansi:
       enabled: never
 
-server:
-  servlet:
-    context-path: /money_tracker
-
 # AI provider: OpenRouter (free tier) on Railway
 ai:
   provider: xai
