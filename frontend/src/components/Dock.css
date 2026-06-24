@@ -1,0 +1,108 @@
+/* ─── Dock: Brutalist Left Sidebar ─── */
+
+.dock-outer {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 1000;
+  width: 56px;
+  border-right: 1px solid var(--border);
+  background: var(--bg-surface);
+}
+
+.dock-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  padding: var(--sp-4) 0;
+  gap: var(--sp-1);
+}
+
+/* ─── Dock Item ─── */
+.dock-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  color: var(--fg-muted);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: color var(--t-fast), border-color var(--t-fast), background var(--t-fast);
+  flex-shrink: 0;
+}
+
+.dock-item:hover {
+  color: var(--fg-dim);
+  border-color: var(--border);
+  background: var(--bg-elevated);
+}
+
+.dock-item.active {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.dock-item:focus-visible {
+  border-color: var(--accent);
+  outline: none;
+}
+
+/* ─── Icon ─── */
+.dock-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  line-height: 1;
+  pointer-events: none;
+}
+
+/* ─── Label (shown on hover via sibling selector) ─── */
+.dock-label {
+  position: absolute;
+  left: calc(100% + 8px);
+  white-space: nowrap;
+  padding: 2px 8px;
+  background: var(--bg);
+  border: 1px solid var(--border-bright);
+  color: var(--fg);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity var(--t-fast), transform var(--t-fast);
+  z-index: 2;
+}
+
+.dock-item:hover .dock-label {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ─── Bottom section (status) ─── */
+.dock-bottom {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.dock-status-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--success);
+  border: 1px solid var(--bg);
+}
+
+.dock-status-dot.offline {
+  background: var(--danger);
+}

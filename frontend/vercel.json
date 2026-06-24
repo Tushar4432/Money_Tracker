@@ -1,0 +1,9 @@
+{
+  "buildCommand": "vite build",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "rewrites": [
+    { "source": "/money_tracker/api/(.*)", "destination": "https://moneytrackerbackend-production-1483.up.railway.app/money_tracker/api/$1" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

@@ -202,7 +202,7 @@ Future microservice extraction can occur if scale requires it.
 com.financecoach
 
 ├── auth
-├── user
+├── appUser
 ├── transaction
 ├── goal
 ├── analytics

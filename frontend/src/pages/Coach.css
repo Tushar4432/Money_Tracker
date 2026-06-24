@@ -1,0 +1,152 @@
+/* ─── AI Coach: Terminal Chat ─── */
+
+.coach-page {
+  padding-top: var(--sp-6);
+}
+
+.coach-header-badge {
+  padding-top: var(--sp-1);
+}
+
+/* ─── Layout ─── */
+.coach-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--sp-6);
+}
+
+@media (min-width: 1024px) {
+  .coach-layout {
+    grid-template-columns: 280px 1fr;
+    gap: var(--sp-6);
+  }
+}
+
+/* ─── Sidebar ─── */
+.coach-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+}
+
+/* ─── Health Score ─── */
+.health-score-card {
+  padding: var(--sp-5);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  text-align: center;
+}
+
+.health-score-ring {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin: var(--sp-4) auto;
+}
+
+.health-score-value {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--fg-muted);
+}
+
+.health-score-value span {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-right: 2px;
+}
+
+.health-breakdown {
+  font-size: 0.72rem;
+  color: var(--fg-dim);
+  line-height: 1.5;
+  margin: var(--sp-3) 0 0;
+  font-family: var(--font-body);
+}
+
+/* ─── Recommendations ─── */
+.recommendations-card {
+  padding: var(--sp-5);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  /* Fixed height so the list scrolls instead of overflowing the page */
+  max-height: 320px;
+  overflow: hidden;
+}
+
+.recommendations-card .section-title {
+  flex-shrink: 0;
+  margin-bottom: var(--sp-3);
+}
+
+.recommendations-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  /* Scrollable list */
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  /* Room for scrollbar */
+  padding-right: var(--sp-2);
+}
+
+.recommendation-item {
+  display: flex;
+  gap: var(--sp-2);
+  align-items: flex-start;
+  padding: var(--sp-2);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  transition: border-color var(--t-fast);
+  flex-shrink: 0;
+}
+
+.recommendation-item:hover {
+  border-color: var(--border-bright);
+}
+
+.rec-icon {
+  color: var(--accent);
+  font-size: 0.75rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+  font-family: var(--font-mono);
+}
+
+.recommendation-item p {
+  font-size: 0.72rem;
+  color: var(--fg-dim);
+  line-height: 1.5;
+  margin: 0;
+  font-family: var(--font-body);
+  /* Text wraps normally — no truncation */
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* ─── Chat Area wrapper ─── */
+.coach-chat-area {
+  height: 600px;
+}
+
+@media (max-width: 768px) {
+  .coach-chat-area {
+    height: 480px;
+  }
+}
+
+@media (max-width: 480px) {
+  .coach-chat-area {
+    height: 420px;
+  }
+}
