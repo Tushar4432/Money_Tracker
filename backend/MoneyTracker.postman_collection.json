@@ -1,0 +1,1154 @@
+{
+	"info": {
+		"name": "Money Tracker API",
+		"description": "Complete API collection for Money Tracker application. Includes Auth, Transactions, Goals, Notifications, Analytics, and AI Coach endpoints. Uses {{baseUrl}} and {{authToken}} variables.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080/money_tracker",
+			"type": "string"
+		},
+		{
+			"key": "authToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "userId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "goalId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "notificationId",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{authToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": "{{baseUrl}}/api/v1/auth/register",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"john_doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\"\n}"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Response is 'User registered'\", function () {",
+									"    pm.expect(pm.response.text()).to.equal(\"User registered\");",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": "{{baseUrl}}/api/v1/auth/login",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"john_doe\",\n  \"password\": \"password123\"\n}"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Response contains token and userId\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.token).to.not.be.undefined;",
+									"    pm.expect(jsonData.userId).to.not.be.undefined;",
+									"    pm.collectionVariables.set(\"authToken\", jsonData.token);",
+									"    pm.collectionVariables.set(\"userId\", jsonData.userId);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Get Current User (Me)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{baseUrl}}/api/v1/auth/me"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Response contains userId\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.userId).to.not.be.undefined;",
+									"    pm.expect(jsonData.username).to.not.be.undefined;",
+									"    pm.expect(jsonData.email).to.not.be.undefined;",
+									"    pm.collectionVariables.set(\"userId\", jsonData.userId);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": "{{baseUrl}}/api/v1/auth/logout"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Delete User",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": "{{baseUrl}}/api/v1/auth/users/john_doe"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Transactions",
+			"item": [
+				{
+					"name": "Upload Statement (CSV)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": "{{baseUrl}}/api/v1/transaction/upload",
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "bank_statements",
+									"type": "file",
+									"src": "statement.csv"
+								},
+								{
+									"key": "userId",
+									"value": "{{userId}}",
+									"type": "text"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Upload Statement (XLSX)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": "{{baseUrl}}/api/v1/transaction/upload",
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "bank_statements",
+									"type": "file",
+									"src": "statement.xlsx"
+								},
+								{
+									"key": "userId",
+									"value": "{{userId}}",
+									"type": "text"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Transactions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/transaction?userId={{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "transaction"],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Response is an array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Get Category Summary",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/transaction/summary?userId={{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "transaction", "summary"],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Response contains category keys\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('object');",
+									"});"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Goals",
+			"item": [
+				{
+					"name": "Create Goal",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": "{{baseUrl}}/api/v1/goals",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"category\": \"FOOD\",\n  \"targetAmount\": 5000.00,\n  \"period\": \"MONTHLY\",\n  \"startDate\": \"2026-06-01\",\n  \"active\": true\n}"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"pm.test(\"Response contains goal id\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.id).to.not.be.undefined;",
+									"    pm.collectionVariables.set(\"goalId\", jsonData.id);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Get All Goals",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/goals?userId={{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "goals"],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Active Goals",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/goals/active?userId={{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "goals", "active"],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Goal",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": "{{baseUrl}}/api/v1/goals/{{goalId}}",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"targetAmount\": 7000.00,\n  \"active\": true\n}"
+						}
+					}
+				},
+				{
+					"name": "Get Goal Progress",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{baseUrl}}/api/v1/goals/{{goalId}}/progress"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Response contains percentageUsed\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.percentageUsed).to.not.be.undefined;",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Delete Goal",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": "{{baseUrl}}/api/v1/goals/{{goalId}}"
+					}
+				}
+			]
+		},
+		{
+			"name": "Notifications",
+			"item": [
+				{
+					"name": "Create Notification",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": "{{baseUrl}}/api/v1/notifications",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"type\": \"SYSTEM\",\n  \"title\": \"Welcome\",\n  \"message\": \"Welcome to Money Tracker!\"\n}"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"pm.test(\"Response contains notification id\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.id).to.not.be.undefined;",
+									"    pm.collectionVariables.set(\"notificationId\", jsonData.id);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Get All Notifications",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/notifications?userId={{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "notifications"],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Unread Notifications",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/notifications/unread?userId={{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "notifications", "unread"],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Unread Count",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/notifications/unread/count?userId={{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "notifications", "unread", "count"],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Mark As Read",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": "{{baseUrl}}/api/v1/notifications/{{notificationId}}/read"
+					}
+				},
+				{
+					"name": "Mark All As Read",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/notifications/read-all?userId={{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "notifications", "read-all"],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Delete Notification",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": "{{baseUrl}}/api/v1/notifications/{{notificationId}}"
+					}
+				}
+			]
+		},
+		{
+			"name": "Analytics",
+			"item": [
+				{
+					"name": "Spending Summary",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/analytics/summary?userId={{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "analytics", "summary"],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Response contains totalIncome\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.totalIncome).to.not.be.undefined;",
+									"    pm.expect(jsonData.totalExpense).to.not.be.undefined;",
+									"    pm.expect(jsonData.netSavings).to.not.be.undefined;",
+									"    pm.expect(jsonData.topCategory).to.not.be.undefined;",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Category Breakdown",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/analytics/categories?userId={{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "analytics", "categories"],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Category Breakdown (with date range)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/analytics/categories?userId={{userId}}&start=2026-06-01&end=2026-06-30",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "analytics", "categories"],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								},
+								{
+									"key": "start",
+									"value": "2026-06-01"
+								},
+								{
+									"key": "end",
+									"value": "2026-06-30"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Monthly Trends",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/analytics/trends?userId={{userId}}&periods=6&period=MONTHLY",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "analytics", "trends"],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								},
+								{
+									"key": "periods",
+									"value": "6"
+								},
+								{
+									"key": "period",
+									"value": "MONTHLY"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Spending Comparison",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/analytics/comparison?userId={{userId}}&period=MONTHLY",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "analytics", "comparison"],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								},
+								{
+									"key": "period",
+									"value": "MONTHLY"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Budget Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/analytics/budget?userId={{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "analytics", "budget"],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "AI Coach",
+			"item": [
+				{
+					"name": "Chat",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": "{{baseUrl}}/api/v1/ai/chat",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"message\": \"How can I save more money based on my spending?\"\n}"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Response contains AI reply\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.reply).to.not.be.undefined;",
+									"    pm.expect(jsonData.reply.length).to.be.greaterThan(0);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Chat - Quick Question",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": "{{baseUrl}}/api/v1/ai/chat",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"message\": \"Am I spending too much on food?\"\n}"
+						}
+					}
+				},
+				{
+					"name": "Chat - Budget Advice",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": "{{baseUrl}}/api/v1/ai/chat",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"message\": \"What budget should I set for each category?\"\n}"
+						}
+					}
+				},
+				{
+					"name": "Get Recommendations",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/ai/recommendations?userId={{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "ai", "recommendations"],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Response contains recommendations array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.recommendations).to.be.an('array');",
+									"    pm.expect(jsonData.recommendations.length).to.be.greaterThan(0);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Get Health Score",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/ai/health-score?userId={{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "ai", "health-score"],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Response contains score (0-100)\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.score).to.be.a('number');",
+									"    pm.expect(jsonData.score).to.be.within(0, 100);",
+									"    pm.expect(jsonData.savingsRate).to.not.be.undefined;",
+									"    pm.expect(jsonData.breakdown).to.not.be.undefined;",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Check Affordability",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": "{{baseUrl}}/api/v1/ai/affordability",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"itemName\": \"iPhone 15 Pro\",\n  \"cost\": 130000\n}"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"pm.test(\"Response contains affordable flag\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.affordable).to.not.be.undefined;",
+									"    pm.expect(jsonData.analysis).to.not.be.undefined;",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Check Affordability - Small Purchase",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": "{{baseUrl}}/api/v1/ai/affordability",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"itemName\": \"Swiggy order\",\n  \"cost\": 500\n}"
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "E2E Flow",
+			"item": [
+				{
+					"name": "01 - Register User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": "{{baseUrl}}/api/v1/auth/register",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"e2e_tester\",\n  \"email\": \"e2e@test.com\",\n  \"password\": \"testpass123\"\n}"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Register successful\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "02 - Login",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": "{{baseUrl}}/api/v1/auth/login",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"e2e_tester\",\n  \"password\": \"testpass123\"\n}"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Login successful, save token and userId\", function () {",
+									"    pm.response.to.have.status(200);",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"authToken\", jsonData.token);",
+									"    pm.collectionVariables.set(\"userId\", jsonData.userId);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "03 - Get My Profile",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "{{baseUrl}}/api/v1/auth/me"
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Got user profile\", function () {",
+									"    pm.response.to.have.status(200);",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"userId\", jsonData.userId);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "05 - Upload Statement",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": "{{baseUrl}}/api/v1/transaction/upload",
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "bank_statements",
+									"type": "file",
+									"src": "statement.csv"
+								},
+								{
+									"key": "userId",
+									"value": "{{userId}}",
+									"type": "text"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "06 - Get Transactions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/transaction?userId={{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "transaction"],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "07 - Create FOOD Goal",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": "{{baseUrl}}/api/v1/goals",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"category\": \"FOOD\",\n  \"targetAmount\": 5000,\n  \"period\": \"MONTHLY\",\n  \"startDate\": \"2026-06-01\",\n  \"active\": true\n}"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.id) {",
+									"    pm.collectionVariables.set(\"goalId\", jsonData.id);",
+									"}"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "08 - Check Analytics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/analytics/summary?userId={{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "analytics", "summary"],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "09 - AI Health Score",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/ai/health-score?userId={{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "ai", "health-score"],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "10 - AI Chat",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": "{{baseUrl}}/api/v1/ai/chat",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"{{userId}}\",\n  \"message\": \"How am I doing financially?\"\n}"
+						}
+					}
+				},
+				{
+					"name": "11 - Get Notifications",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/notifications?userId={{userId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "notifications"],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "12 - Logout",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": "{{baseUrl}}/api/v1/auth/logout"
+					}
+				}
+			]
+		}
+	]
+}
